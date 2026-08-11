@@ -14,19 +14,12 @@ const { chromium } = require(path.join('c:/Trường học số - source code/pr
   await pg.waitForTimeout(350);
   await shot('1-topic');
 
-  // ① chọn thẻ đầu
-  await pg.click('.tcard:not(.locked)');
-  await pg.waitForTimeout(250);
-  await shot('2-join-empty');
-
-  // ② bấm phím để vào, rồi chạm ô 2
-  await pg.keyboard.press('a');
+  // ① lọc môn rồi chọn thẻ có game mẫu
+  await pg.click('.subchip:nth-child(2)');            // Sinh học
   await pg.waitForTimeout(200);
-  await pg.click('.jslot[data-slot="1"]');
-  await pg.waitForTimeout(300);
-  await shot('3-join-2p');
-  await pg.click('#btnJoinGo');
-  await pg.waitForTimeout(350);
+  await shot('2-topic-sinh');
+  await pg.click('.tcard');
+  await pg.waitForTimeout(500);
   await shot('4-garden');
 
   // ③ chạm đất để Mầm đi, rồi chạm nhà bài học
