@@ -61,6 +61,91 @@ Chỗ khó nằm ở **Ti thể** — nó không nằm trên dòng chảy nên r
 
 Hai bào quan còn lại là bẫy: **Lysosome** đặt vào ô sát nhân thì enzyme tiêu mất nhân, cả dây chuyền chết từ gốc. **Lục lạp** vô hại nhưng chiếm chỗ — tế bào động vật không có nó.
 
+## 2c. Mầm — linh vật đi cùng người chơi
+
+Dùng lại đúng linh vật đang làm gương mặt chatbot trong hệ THS
+([prj-gkebook-shadcn-frontend/public/chatbot-mascot.svg](../../../../prj-gkebook-shadcn-frontend/public/chatbot-mascot.svg)),
+đặt tên là **Mầm**. Cái khăn quàng đỏ trong thiết kế gốc quyết định luôn vai của nó:
+**đội viên cùng lứa với người chơi, không phải người dạy.**
+
+### Ba luật cứng
+1. **Mầm chỉ được hỏi, không được khẳng định.** Mọi phán đoán về kiến thức phải kết thúc
+   bằng dấu hỏi. Được nói *"hay là thiếu cái gì ở giữa nhỉ?"*, không được nói *"tại thiếu Golgi"*.
+2. **Mầm không bao giờ phán xử.** Mô phỏng phán xử. Mầm chỉ phản ứng như người bạn đứng cạnh cùng nhìn.
+3. **Mầm không được biết trước thứ người chơi chưa thấy**, kể cả khi hệ thống đã biết.
+
+Giọng kế thừa nguyên từ bộ câu chào có sẵn trong kho (`GREDDING_CHATBOT_MESSAGES`):
+tự gọi **"mình"**, gọi người chơi là **"bạn"**, câu ngắn, không lên gân.
+
+### Tam giác ba vai trong một chặng
+
+| Vai | Biết gì | Nói kiểu gì | Ví dụ |
+|---|---|---|---|
+| **Bác trưởng xưởng** | Biết nghề, biết đáp án nhưng không nói | Giao việc, gỡ bí khi tắc lâu, tổng kết | *"Hôm nay xưởng phải giao 8 kiện mà máy móc chưa đặt gì cả."* |
+| **Mầm** | Không biết gì hơn bạn | Thắc mắc, đoán bằng câu hỏi, reo/xịu | *"Ơ, hàng dồn cục trước trạm 1 kìa. Chỗ đó thiếu máy gì nhỉ?"* |
+| **Mô phỏng** | Là sự thật | Không nói câu nào, chỉ diễn ra | Hàng ứ, đèn đỏ, nhân xám dần |
+
+**Thứ tự lời trong một chặng:** bác mở màn → trong lúc chơi **chỉ Mầm nói** → tắc quá 40 giây
+không thao tác thì bác mới gỡ bí một câu → xong chặng bác chốt, Mầm nói câu học sinh.
+Nếu cả hai cùng nói lúc chơi thì thành ồn và người chơi không biết tin ai.
+
+### Mầm ở đâu
+
+| Màn hình | Mầm ở đâu | Làm gì |
+|---|---|---|
+| Cổng thế giới | Đứng cạnh bạn | Chào, nhắc chuyện lần trước |
+| Bản đồ thế giới | Đứng dưới gốc cây của chính nó, giữa thị trấn | Cây lớn theo tiến bộ |
+| Trong chặng | Góc phải dưới, **nhỏ hơn bác trưởng xưởng** | Thắc mắc, đoán bằng câu hỏi |
+| Bảng lý thuyết cuối chặng | Một dòng *"à, hoá ra…"* | Ghi lại điều học được bằng giọng học sinh |
+| Chơi nhanh từ kho cũ | Vẫn là bong bóng chatbot như hiện tại | Thêm câu mời chơi — cầu nối kho → game |
+
+### Cây của Mầm — năm giai đoạn
+
+| Giai đoạn | Mở khi | Trên đầu Mầm | Cây giữa thị trấn |
+|---|---|---|---|
+| 1. Hai lá | ngay từ đầu | mầm hai lá | chồi trong chậu |
+| 2. Ba lá | qua 1 chặng | thêm một lá | cây con có gốc |
+| 3. Ra cành | qua 3 chặng | có cành | cây cao, tán ba chùm |
+| 4. Ra hoa | qua 8 chặng | có hoa | cây có hoa |
+| 5. Có quả | qua 15 chặng | có quả | cây cổ thụ có quả |
+
+Cây **cùng một giai đoạn ở mọi thế giới** — đây là thứ duy nhất trong thị trấn thuộc riêng
+người chơi chứ không thuộc lớp. Và vì cây đứng *trong* thị trấn nên nó không thành thanh
+tiến độ thứ hai: nó là một phần của cái bản đồ vốn đã là thanh tiến độ.
+
+## 2d. Cách trình bày lý thuyết — không dùng popup
+
+Khi đủ đơn hàng, **không bật hộp thoại che màn**. Bảng lý thuyết mở ra ngay cạnh dây chuyền,
+và **dây chuyền vẫn chạy** để người học vừa đọc vừa nhìn hệ thống làm việc.
+
+Cụ thể: khay máy ở dưới ẩn đi, một cột lý thuyết hiện bên phải (màn hẹp thì xuống dưới),
+gồm: lời chốt của bác trưởng xưởng · đường đi của một kiện hàng đánh số 1–6 với hai lớp tên ·
+giải thích riêng vì sao máy phát điện không đứng trên băng chuyền mà thiếu nó thì hai máy
+kia đứng im · trích đoạn sách có ghi số trang · một dòng của Mầm · thông báo mầm ra thêm lá.
+
+Hệ quả trong lõi mô phỏng: đủ đơn thì **không dừng băng chuyền**, chỉ ngừng đếm đơn
+(để không hiện "13/8") và đóng băng đồng hồ ca làm.
+
+## 2e. Cách viết chữ trong trang — hai lớp tên
+
+Mọi máy móc và mọi loại hàng đều có **tên nghề** (chữ to, hiểu ngay phải làm gì) và
+**tên trong sách** (chữ nhỏ in nghiêng ngay dưới). Học sinh hiểu việc trước, nhớ từ đúng sau.
+
+| Tên nghề | Tên trong sách |
+|---|---|
+| Phòng bản thiết kế | nhân tế bào |
+| Máy đọc bản thiết kế | ribosome |
+| Xưởng gấp hàng | lưới nội chất hạt |
+| Xưởng đóng gói | bộ máy Golgi |
+| Xe chở hàng | túi tiết |
+| Máy phát điện | ti thể |
+| Thùng enzyme | lysosome |
+| Máy hứng nắng | lục lạp |
+| bản thiết kế → hàng thô → hàng đã gấp → kiện đã đóng | mARN → chuỗi protein thô → protein đã gấp → protein đã đóng gói |
+
+Nhãn các ô cũng viết theo việc phải làm: *"đặt máy vào đây"*, *"cắm máy phát điện"*,
+*"sát vách nhân"* — thay vì thuật ngữ.
+
 ## 3. Các quyết định đã chốt
 
 | # | Quyết định | Chốt |

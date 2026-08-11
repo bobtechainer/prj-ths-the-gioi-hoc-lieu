@@ -50,3 +50,16 @@ Updated: 2026-08-11 · iteration 2 (sau vòng 4-lens: 28 phát hiện, dedupe v�
 | D33 | P2 | Góc Ô NGUỒN–TRẠM 2 hơi chật, chữ chạm mép nhà | 1 | open — demo chấp nhận |
 | D34 | P2 | Chữ phụ SVG ~10-11px hiển thị thật ở 720p, bàn cuối lớp khó đọc | 1 | open — hình khối/màu gánh phần hiểu |
 | D35 | P2 | Tệp harness dev nằm cạnh tệp giao hàng | 1 | fixed — dời vào prototype/qa/, ảnh bằng chứng về qc/evidence/ |
+
+## Đợt 4 — thêm Mầm + viết lại chữ + bỏ popup lý thuyết
+
+| ID | Sev | Defect | Seen | Status |
+|----|-----|--------|------|--------|
+| D36 | P1 | Lý thuyết hiện bằng popup che hết dây chuyền, người học không xem được hệ thống chạy trong lúc đọc | 1 | fixed — bảng lý thuyết mở tại chỗ bên cạnh, băng chuyền vẫn chạy, đơn ngừng đếm ở 8 |
+| D37 | P1 | Bóng thoại bác trưởng xưởng giữ nguyên câu mở màn sau khi đã xong việc | 1 | fixed — bác chốt một câu khi đủ đơn |
+| D38 | P1 | Khung dọc: hai bóng thoại (bác + Mầm) đè lên nhau, không đọc được câu nào | 1 | fixed — màn hẹp chỉ hiện bóng của người vừa nói |
+| D39 | P1 | Bảng tên trạm bị kiện hàng xếp hàng che mất chữ | 1 | fixed — tách lớp nhãn, vẽ sau lớp kiện hàng |
+| D40 | P2 | Nhãn "Ổ ĐIỆN" bị băng chuyền chạy đè, khó đọc | 1 | fixed — viền trắng quanh chữ (paint-order) |
+| D41 | P2 | Bảng tên hai dòng ở Ổ ĐIỆN tràn qua tường dưới của tế bào | 1 | fixed — dời ô nguồn lên (520, 508) |
+| D42 | P2 | Mầm trên bản đồ đứng đè vào công trình Vườn thực nghiệm | 1 | fixed — dời Vườn sang phải, Mầm đứng cạnh bảng tên cây |
+| D43 | P2 | Thuật ngữ Sinh học dồn vào mặt người chơi trước khi giải thích ("bào quan", "Lưới nội chất hạt") | 1 | fixed — hai lớp tên: tên nghề to + tên sách nhỏ in nghiêng |

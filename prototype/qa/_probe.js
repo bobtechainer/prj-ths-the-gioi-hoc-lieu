@@ -74,13 +74,18 @@ t('S05b RÚT điện giữa lúc trạm đang biến đổi → máy đứng, c�
   assert(SIM.snapshot(s).parcels.some(p => p.seg >= 1) , 'có điện lại phải chạy tiếp');
 });
 
-t('S06 xếp đúng 5 trạm → đủ 8 kiện → done, và DỪNG Ở ĐÚNG 8', () => {
+t('S06 xếp đúng 5 trạm → đủ 8 kiện → done, đơn KHÔNG đếm lố, băng chuyền VẪN chạy', () => {
   const s = build(CORRECT); SIM.setRun(s, true);
   SIM.step(s, 90);
-  const snap = SIM.snapshot(s);
+  let snap = SIM.snapshot(s);
   assert(snap.done === true, 'done phải true');
-  assert(snap.out === SIM.WIN, 'hết ca phải dừng ở đúng ' + SIM.WIN + ', được ' + snap.out);
-  assert(snap.running === false, 'hết ca sim phải tự dừng');
+  assert(snap.out === SIM.WIN, 'đơn phải chốt ở đúng ' + SIM.WIN + ', được ' + snap.out);
+  // Đủ đơn thì băng chuyền vẫn chạy để người học vừa đọc lý thuyết vừa nhìn nó làm
+  assert(snap.running === true, 'đủ đơn rồi băng chuyền vẫn phải chạy để quan sát');
+  SIM.step(s, 60);
+  snap = SIM.snapshot(s);
+  assert(snap.out === SIM.WIN, 'chạy tiếp 60s nữa đơn vẫn phải là ' + SIM.WIN + ', được ' + snap.out);
+  assert(snap.parcels.length > 0 || snap.running, 'dây chuyền phải còn sống để quan sát');
 });
 
 t('S07 lysosome vào S2 giết nhân; gỡ ra → hồi; ở pad khác vô hại', () => {

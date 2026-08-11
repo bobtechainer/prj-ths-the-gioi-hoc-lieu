@@ -1,5 +1,5 @@
 # Spec matrix — xuong-lap-te-bao v2 "Nhà máy tí hon"
-Updated: 2026-08-11 · iteration 3
+Updated: 2026-08-11 · iteration 4
 
 | ID  | Requirement | Verify | W | Status |
 |-----|-------------|--------|---|--------|
@@ -23,4 +23,14 @@ Updated: 2026-08-11 · iteration 3
 | S18 | (Honesty) __step tất định: cùng state + cùng lệnh → cùng kết quả byte-một | probe:det | 3 | ✓ |
 | S19 | (Honesty) Fuzz 200 cách xếp ngẫu nhiên + chạy 60s sim: không crash, không NaN, sim không kẹt vô hạn | probe:fuzz | 3 | ✓ |
 | S20 | Hooks đủ theo contract: __step __place __remove __setRun __state __goScreen __screenPos; sim-core thuần bốc chạy được trong Node | code:hooks | 3 | ✓ |
+| S22 | Mọi máy và mọi loại hàng đều có hai lớp tên: tên nghề (to) + tên trong sách (nhỏ, in nghiêng) — ở khay, ở bảng tên trạm, ở thẻ thông tin | shot:naming | 5 | ✓ |
+| S23 | Nhãn các ô viết theo việc phải làm ("đặt máy vào đây", "cắm máy phát điện", "sát vách nhân"), không dùng thuật ngữ | shot:empty | 3 | ✓ |
+| S24 | Mầm có mặt: bản đồ (dưới gốc cây), trong chặng (góc phải, nhỏ hơn bác trưởng xưởng), bảng lý thuyết | shot:mam | 5 | ✓ |
+| S25 | Mọi câu của Mầm là thắc mắc hoặc phán đoán kết thúc bằng dấu hỏi — không câu nào khẳng định kiến thức | code:mam-hoi | 5 | ✓ |
+| S26 | Trong lúc chơi chỉ Mầm nói; bác trưởng xưởng chỉ mở màn, gỡ bí sau 40s không thao tác, và chốt cuối | code:turn-order | 3 | ✓ |
+| S27 | Cây của Mầm giữa thị trấn, 5 giai đoạn, lớn thêm một bậc sau mỗi chặng; không đè công trình nào | shot:tree | 3 | ✓ |
+| S28 | Đủ đơn: KHÔNG bật popup. Bảng lý thuyết mở tại chỗ, băng chuyền vẫn chạy, đơn ngừng đếm ở 8 | probe:inplace | 5 | ✓ |
+| S29 | Bảng lý thuyết có: lời chốt của bác, đường đi 1–6 hai lớp tên, giải thích máy phát điện, trích sách có số trang, dòng của Mầm, thông báo mầm ra lá | shot:theory | 3 | ✓ |
+| S30 | Màn hẹp: chỉ hiện bóng thoại của người vừa nói; khay bọc nhiều hàng nên mọi máy đều với tới; bảng lý thuyết xuống dưới | shot:mobile | 3 | ✓ |
+| S31 | Chữ trong sân khấu có viền trắng, đọc được cả khi băng chuyền chạy phía dưới; bảng tên trạm vẽ trên lớp kiện hàng | shot:legible | 3 | ✓ |
 | S21 | Thoại bác trưởng xưởng đúng giọng nhân vật, ngắn, không giọng máy | shot:log | 1 | ✓ |

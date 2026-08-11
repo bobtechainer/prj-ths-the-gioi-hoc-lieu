@@ -16,19 +16,42 @@ const SIM = (function(){
   const POWER_PAD = 'S1';
   const NEAR_NUCLEUS = 'S2';
 
-  const KINDS = { marn:'mARN', tho:'chuỗi protein thô', gap:'protein đã gấp', goi:'kiện protein đóng gói' };
+  // HAI LỚP TÊN: `ten` là tên nghề trong xưởng (chữ to, hiểu ngay phải làm gì),
+  // `sach` là tên trong sách Sinh học (chữ nhỏ, để vẫn nhớ được từ đúng).
+  const KINDS = {
+    marn: 'bản thiết kế',  tho: 'hàng thô',
+    gap : 'hàng đã gấp',   goi: 'kiện đã đóng'
+  };
+  const KINDS_SACH = {
+    marn: 'mARN',              tho: 'chuỗi protein thô',
+    gap : 'protein đã gấp',    goi: 'protein đã đóng gói'
+  };
 
   const ORGS = {
-    ribo : { ten:'Ribosome',          lam:'Đọc mARN, lắp thành chuỗi protein',      vao:'marn', ra:'tho', atp:true  },
-    lnc  : { ten:'Lưới nội chất hạt', lam:'Gấp chuỗi protein cho đúng hình dạng',   vao:'tho',  ra:'gap', atp:false },
-    golgi: { ten:'Bộ máy Golgi',      lam:'Đóng gói protein thành kiện',            vao:'gap',  ra:'goi', atp:true  },
-    tuiti: { ten:'Túi tiết',          lam:'Chở kiện protein ra cửa xuất',           vao:'goi',  ra:'goi', atp:false },
-    tithe: { ten:'Ti thể',            lam:'Nhà máy điện — phát năng lượng ATP',     vao:null,   ra:null,  atp:false, power:true,
-             hint:'Cắm vào Ô NGUỒN có dây điện thì mới cấp điện được.' },
-    lyso : { ten:'Lysosome',          lam:'Túi enzyme tiêu hoá, dọn rác trong tế bào', vao:null, ra:null, atp:false,
-             hint:'Kê sát nhân là enzyme tiêu luôn cái nhân.' },
-    lucla: { ten:'Lục lạp',           lam:'Quang hợp — chỉ tế bào thực vật mới có', vao:null,   ra:null,  atp:false,
-             hint:'Xưởng mình là tế bào động vật, nó không giúp gì đâu.' }
+    ribo : { ten:'Máy đọc bản thiết kế', sach:'Ribosome',
+             lam:'Đọc bản thiết kế từ nhân, làm ra hàng thô.',
+             vao:'marn', ra:'tho', atp:true  },
+    lnc  : { ten:'Xưởng gấp hàng',       sach:'Lưới nội chất hạt',
+             lam:'Gấp hàng thô lại cho đúng hình.',
+             vao:'tho',  ra:'gap', atp:false },
+    golgi: { ten:'Xưởng đóng gói',       sach:'Bộ máy Golgi',
+             lam:'Đóng hàng đã gấp thành kiện.',
+             vao:'gap',  ra:'goi', atp:true  },
+    tuiti: { ten:'Xe chở hàng',          sach:'Túi tiết',
+             lam:'Chở kiện ra cửa xuất hàng.',
+             vao:'goi',  ra:'goi', atp:false },
+    tithe: { ten:'Máy phát điện',        sach:'Ti thể',
+             lam:'Làm ra điện cho những máy cần điện.',
+             vao:null,   ra:null,  atp:false, power:true,
+             hint:'Máy này phải cắm vào ổ điện, để chỗ khác thì không ra điện.' },
+    lyso : { ten:'Thùng enzyme',         sach:'Lysosome',
+             lam:'Đựng nước tiêu hoá, dùng để dọn rác trong tế bào.',
+             vao:null,   ra:null,  atp:false,
+             hint:'Đặt sát vách nhân thì nước trong thùng ăn mất cái nhân.' },
+    lucla: { ten:'Máy hứng nắng',        sach:'Lục lạp',
+             lam:'Hứng nắng làm ra đường. Chỉ nhà cây mới có máy này.',
+             vao:null,   ra:null,  atp:false,
+             hint:'Xưởng mình là tế bào động vật nên máy này để đó cũng không chạy.' }
   };
 
   function create(){
@@ -100,7 +123,7 @@ const SIM = (function(){
     }
 
     if (!s.running) return;
-    s.runT += dt;                 // thời gian ca làm việc thật (nguồn cho màn chốt)
+    if (!s.done) s.runT += dt;    // thời gian ca làm việc; đủ đơn thì đồng hồ đứng lại
 
     // sinh kiện
     if (s.nucleusAlive && !s.done){
@@ -150,13 +173,15 @@ const SIM = (function(){
     const exiting = s.parcels.filter(p => p.phase === 'exit');
     if (exiting.length){
       s.parcels = s.parcels.filter(p => p.phase !== 'exit');
+      // Đủ đơn rồi thì KHÔNG dừng băng chuyền — người học cần vừa đọc lý thuyết
+      // vừa nhìn dây chuyền chạy. Chỉ ngừng đếm đơn để không hiện "13/8".
       for (const _ of exiting){
-        s.out += 1;
-        s.events.push({ type:'exit', out: s.out });
-        if (s.out >= WIN && !s.done){
-          s.done = true;
-          s.running = false;               // hết ca: dừng cả dây chuyền, không đếm lố đơn
-          s.events.push({ type:'win' });
+        if (!s.done){
+          s.out += 1;
+          s.events.push({ type:'exit', out: s.out });
+          if (s.out >= WIN){ s.done = true; s.events.push({ type:'win' }); }
+        } else {
+          s.events.push({ type:'exit-extra' });
         }
       }
     }
@@ -191,7 +216,7 @@ const SIM = (function(){
   const drainEvents = s => s.events.splice(0);
 
   return { create, place, remove, setRun, step, snapshot, drainEvents,
-           ORGS, KINDS, PADS, BELT, POWER_PAD, NEAR_NUCLEUS, WIN, SUB,
+           ORGS, KINDS, KINDS_SACH, PADS, BELT, POWER_PAD, NEAR_NUCLEUS, WIN, SUB,
            SPAWN_PERIOD, SEG_DUR, TRANSFORM_T };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = SIM;

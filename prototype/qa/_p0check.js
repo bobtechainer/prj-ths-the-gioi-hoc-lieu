@@ -56,13 +56,13 @@ const { chromium } = require(path.join('c:/Trường học số - source code/pr
   await pg.click('#btnRun');
   await pg.waitForFunction(() => window.__state().done, null, { timeout: 60000 });
   await pg.waitForTimeout(1200);          // doneTimer 900ms
-  const sheetShown = await pg.evaluate(() => document.getElementById('scr-done').classList.contains('on'));
-  const doneTime = await pg.evaluate(() => document.getElementById('doneTime').textContent);
-  await pg.evaluate(() => { for (const b of document.querySelectorAll('#scr-done .btn')) if (b.textContent.includes('Chơi lại')) b.click(); });
+  const sheetShown = await pg.evaluate(() => document.getElementById('scr-play').classList.contains('done-mode'));
+  const doneTime = await pg.evaluate(() => document.getElementById('thTime').textContent);
+  await pg.evaluate(() => { for (const b of document.querySelectorAll('#theory .btn')) if (b.textContent.includes('Làm lại')) b.click(); });
   await pg.waitForTimeout(250);
   st = await pg.evaluate(() => window.__state());
-  t('auto thắng thật → màn chốt hiện, giờ từ sim (' + doneTime + ')', sheetShown && /giây|phút/.test(doneTime) && doneTime !== '0 giây');
-  t('Chơi lại → dọn sạch', st.out === 0 && st.screen === 'play', JSON.stringify({ out: st.out, screen: st.screen }));
+  t('auto thắng thật → bảng lý thuyết hiện TẠI CHỖ, giờ từ sim (' + doneTime + ')', sheetShown && /giây|phút/.test(doneTime) && doneTime !== '0 giây');
+  t('Làm lại → dọn sạch, bảng lý thuyết đóng', st.out === 0 && st.screen === 'play', JSON.stringify({ out: st.out, screen: st.screen }));
 
   t('không lỗi console/page', errors.length === 0, errors.join('|'));
   console.log(`\n${pass} pass, ${fail} fail`);
