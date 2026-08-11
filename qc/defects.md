@@ -63,3 +63,14 @@ Updated: 2026-08-11 · iteration 2 (sau vòng 4-lens: 28 phát hiện, dedupe v�
 | D41 | P2 | Bảng tên hai dòng ở Ổ ĐIỆN tràn qua tường dưới của tế bào | 1 | fixed — dời ô nguồn lên (520, 508) |
 | D42 | P2 | Mầm trên bản đồ đứng đè vào công trình Vườn thực nghiệm | 1 | fixed — dời Vườn sang phải, Mầm đứng cạnh bảng tên cây |
 | D43 | P2 | Thuật ngữ Sinh học dồn vào mặt người chơi trước khi giải thích ("bào quan", "Lưới nội chất hạt") | 1 | fixed — hai lớp tên: tên nghề to + tên sách nhỏ in nghiêng |
+
+## Đợt 5 — carousel hero cho màn chọn chuyện
+
+| ID | Sev | Defect | Seen | Status |
+|----|-----|--------|------|--------|
+| D44 | P1 | Thoát game quay lại màn chọn thì thẻ vẫn mờ 40% — hoạt họa "chìm" của thẻ vừa bấm bị giữ nguyên | 1 | fixed — vẽ lại thẻ mỗi lần vào màn chọn |
+| D45 | P1 | Mầm giữa carousel cao 726px trên khung 720px, đầu và chân bị cắt | 1 | fixed — hạ cỡ xuống 178px × scale 1.34, đứng trên dãy ảnh |
+| D46 | P1 | Chữ trắng trên nền màu chỉ đạt ~3.9:1, dưới chuẩn AA | 1 | fixed — làm đậm 4 màu nền, đo lại: 4.90 / 6.15 / 6.01 / 5.20 |
+| D47 | P1 | Kính bảo hộ (Hóa) và mũ bảo hộ (Lý) bị đầu Mầm vẽ đè lên, không thấy | 1 | fixed — tách trang phục hai lớp: áo vẽ trước đầu, mũ/kính vẽ sau đầu |
+| D48 | P1 | Khung dọc: bộ lọc môn xuống 3 hàng che chữ; nút mũi tên đè lên Mầm kề | 1 | fixed — bộ lọc cuộn ngang một hàng; màn nhỏ ẩn hai Mầm kề, chuyển câu bằng dãy ảnh |
+| D49 | P2 | Nhân vật hai bên đè lên khối chữ câu hỏi | 1 | fixed — dạt vào 33%/67%, thêm lớp tối mềm dưới đáy |

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Xưởng lắp tế bào — Nhà máy tí hon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet"><title>Xưởng lắp tế bào — Nhà máy tí hon</title>
 <style>
   *,*::before,*::after{box-sizing:border-box}
   :root{
@@ -44,61 +44,155 @@
   .btn:disabled{opacity:.4;pointer-events:none}
 
   /* ───── 0 · CHỌN CHỦ ĐỀ + GHÉP NGƯỜI CHƠI ───── */
-  .topic-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:10px;padding:20px;min-height:0;overflow-y:auto}
-  .topic-sub{margin:0 0 14px;color:var(--muted);font-weight:600;font-size:15px}
-  .cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:980px}
-  .tcard{
-    display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:264px;min-height:210px;
-    background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:var(--sh);
-    padding:20px 18px 16px;font:inherit;text-align:left;cursor:pointer;color:var(--ink);
-    transition:transform .12s;
+  /* ═══════════ MÀN CHỌN CHUYỆN — carousel hero ═══════════
+     Nền đổi màu theo thẻ đang chọn. Mầm đứng giữa, đổi trang phục theo môn.
+     Hai bên là hai câu kề, mờ và nhỏ. Đáy màn là dãy ảnh nhỏ để nhảy thẳng. */
+  #scr-topic{
+    position:fixed;inset:0;overflow:hidden;
+    background:var(--hero-bg,#3fae6b);
+    transition:background-color 650ms cubic-bezier(.4,0,.2,1);
   }
-  .tcard:nth-child(1){transform:rotate(-1.2deg)}
-  .tcard:nth-child(3){transform:rotate(1.2deg)}
-  .tcard:not(.locked):hover{transform:translateY(-6px) rotate(0)}
-  .tcard .tico{font-size:38px;line-height:1}
-  .tcard b{font-size:19px;line-height:1.35}
-  .tcard small{color:var(--muted);font-weight:600}
-  .tcard .tgo{margin-top:auto;background:var(--green);color:#fff;border:2.5px solid var(--ink);
-    border-radius:10px;padding:5px 12px;font-weight:800;font-size:14px}
-  .tcard.locked{opacity:.55;cursor:default}
-  .tcard.locked .tgo{background:#cfc4ad}
-  .subrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
-  .subchip{
-    font:inherit;font-weight:800;font-size:14px;padding:7px 16px;cursor:pointer;
-    background:var(--card);color:var(--ink);border:2.5px solid var(--ink);border-radius:99px;
-    box-shadow:0 2.5px 0 var(--edge);transition:.12s;
+  @media (prefers-reduced-motion:reduce){
+    #scr-topic{transition:none}
+    #hero-stage .figure{transition:opacity 120ms linear!important}
   }
-  .subchip:hover{transform:translateY(-2px)}
-  .subchip.on{background:var(--mc);color:#fff;box-shadow:0 2.5px 0 rgba(58,46,36,.6)}
-  .cards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:1080px;overflow-y:auto;padding:6px}
-  .tcard{
-    position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;
-    width:236px;min-height:186px;background:var(--card);border:3px solid var(--ink);
-    border-radius:18px;box-shadow:var(--sh);border-bottom:6px solid var(--mc);
-    padding:16px 15px 13px;font:inherit;text-align:left;cursor:pointer;color:var(--ink);
-    transition:transform .14s, box-shadow .14s;
+  /* hạt nhiễu cho nền đỡ phẳng */
+  #hero-grain{
+    position:absolute;inset:0;pointer-events:none;z-index:5;opacity:.42;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+    background-size:200px 200px;
   }
-  .tcard:nth-child(odd){transform:rotate(-.8deg)}
-  .tcard:nth-child(3n){transform:rotate(.9deg)}
-  .tcard:hover{transform:translateY(-7px) rotate(0);box-shadow:0 3px 0 var(--edge),0 16px 30px rgba(90,70,40,.2)}
-  .tcard:hover .tico{transform:scale(1.25) rotate(-8deg)}
-  .tcard .tico{font-size:34px;line-height:1;transition:transform .18s}
-  .tcard b{font-size:16.5px;line-height:1.35}
-  .tcard small{color:var(--muted);font-weight:700}
-  .tcard .tgo{margin-top:auto;background:var(--mc);color:#fff;border:2.5px solid var(--ink);
-    border-radius:10px;padding:4px 12px;font-weight:800;font-size:13.5px}
-  .tcard.locked{opacity:.55;cursor:default}
-  .tcard.locked:hover{transform:none;box-shadow:var(--sh)}
-  .tcard.locked:hover .tico{transform:none}
-  .tcard.locked .tgo{background:#cfc4ad}
-  @keyframes cardpick{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(2deg)}100%{transform:scale(.9);opacity:.4}}
-  .tcard.picked{animation:cardpick .3s ease forwards}
-  /* nút lui/tiến nổi trên khu vườn — màn nào cũng phải có đường ra */
-  .gnav{position:absolute;top:12px;left:14px;right:14px;display:flex;gap:10px;z-index:6;pointer-events:none}
-  .gnav .btn{pointer-events:auto}
-  .gnav .sp{flex:1}
+  /* chữ khổng lồ chìm phía sau */
+  #hero-ghost{
+    position:absolute;left:0;right:0;top:12%;z-index:2;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;user-select:none;-webkit-user-select:none;
+    font-family:'Baloo 2',var(--font,inherit);font-weight:800;
+    font-size:clamp(64px,17vw,240px);line-height:1;letter-spacing:-.03em;
+    text-transform:uppercase;color:#fff;opacity:.19;white-space:nowrap;
+    transition:opacity 650ms cubic-bezier(.4,0,.2,1);
+  }
+  /* nhãn góc trên */
+  #hero-brand{
+    position:absolute;top:20px;left:22px;z-index:60;
+    font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+    color:#fff;opacity:.92;
+  }
+  /* bộ lọc môn */
+  #hero-subs{
+    position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:60;
+    display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:92vw;
+  }
+  #hero-subs button{
+    font:inherit;font-weight:800;font-size:13.5px;padding:9px 16px;min-height:44px;
+    cursor:pointer;border-radius:99px;color:#fff;
+    background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.45);
+    transition:transform 160ms,background-color 160ms,border-color 160ms;
+  }
+  #hero-subs button:hover{transform:translateY(-2px);background:rgba(255,255,255,.28)}
+  #hero-subs button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  #hero-subs button[aria-pressed="true"]{background:#fff;color:#2a2118;border-color:#fff}
+
+  /* sân khấu nhân vật */
+  #hero-stage{position:absolute;inset:0;z-index:3}
+  /* lớp tối mềm dưới đáy: giữ chữ trắng đọc được dù nhân vật đi qua phía sau */
+  #hero-scrim{position:absolute;left:0;right:0;bottom:0;height:44%;z-index:12;pointer-events:none;
+    background:linear-gradient(transparent,rgba(24,18,10,.5))}
+  #hero-stage .figure{
+    position:absolute;bottom:104px;width:min(17vw,178px);aspect-ratio:.62/1;
+    will-change:transform,filter,opacity,left;
+    transition:transform 650ms cubic-bezier(.4,0,.2,1),filter 650ms cubic-bezier(.4,0,.2,1),
+               opacity 650ms cubic-bezier(.4,0,.2,1),left 650ms cubic-bezier(.4,0,.2,1);
+  }
+  #hero-stage .figure svg{width:100%;height:100%;display:block;
+    filter:drop-shadow(0 18px 26px rgba(30,20,10,.28))}
+  #hero-stage .figure.center{left:50%;transform:translateX(-50%) scale(1.34);filter:none;opacity:1;z-index:20}
+  #hero-stage .figure.side  {transform:translateX(-50%) scale(.72);filter:blur(2.5px);opacity:.62;z-index:10}
+  #hero-stage .figure.left  {left:33%}
+  #hero-stage .figure.right {left:67%}
+  #hero-stage .figure.back  {left:50%;transform:translateX(-50%) scale(.52);filter:blur(5px);opacity:.42;z-index:5}
+
+  /* khối chữ + nút mũi tên góc dưới trái */
+  #hero-info{position:absolute;left:24px;bottom:120px;z-index:60;max-width:min(330px,42vw);color:#fff;text-shadow:0 2px 12px rgba(20,14,8,.45)}
+  #hero-info .mon{
+    display:inline-block;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.45);
+    border-radius:99px;padding:4px 12px;margin-bottom:10px;
+  }
+  #hero-info h2{
+    margin:0 0 8px;font-family:'Baloo 2',var(--font,inherit);
+    font-size:clamp(24px,3.4vw,40px);line-height:1.14;font-weight:800;letter-spacing:-.01em;
+  }
+  #hero-info .lop{margin:0 0 6px;font-size:14px;font-weight:700;opacity:.9}
+  #hero-info .lock{margin:0;font-size:13.5px;font-weight:700;opacity:.9}
+  #hero-arrows{display:flex;gap:12px;margin-top:16px}
+  #hero-arrows button{
+    width:56px;height:56px;border-radius:50%;cursor:pointer;
+    display:grid;place-items:center;color:#fff;
+    background:transparent;border:2px solid rgba(255,255,255,.85);
+    transition:transform 150ms,background-color 150ms;
+  }
+  #hero-arrows button:hover{transform:scale(1.08);background:rgba(255,255,255,.14)}
+  #hero-arrows button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+  /* nút vào bài góc dưới phải */
+  #hero-go{
+    position:absolute;right:24px;bottom:126px;z-index:60;text-shadow:0 2px 12px rgba(20,14,8,.45);
+    display:flex;align-items:center;gap:10px;cursor:pointer;
+    font-family:'Baloo 2',var(--font,inherit);font-weight:800;
+    font-size:clamp(19px,2.6vw,34px);letter-spacing:-.01em;line-height:1;
+    color:#fff;background:transparent;border:0;padding:10px 4px;min-height:56px;
+    transition:transform 180ms,opacity 180ms;
+  }
+  #hero-go:hover{transform:translateX(4px)}
+  #hero-go:focus-visible{outline:3px solid #fff;outline-offset:4px;border-radius:8px}
+  #hero-go[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+
+  /* dãy ảnh nhỏ dưới đáy */
+  #hero-strip{
+    position:absolute;left:0;right:0;bottom:0;z-index:60;
+    display:flex;gap:8px;align-items:flex-end;
+    padding:8px 18px 12px;overflow-x:auto;
+    background:linear-gradient(transparent,rgba(30,20,10,.22));
+    scrollbar-width:none;
+  }
+  #hero-strip::-webkit-scrollbar{display:none}
+  #hero-strip button{
+    flex:none;width:64px;min-height:74px;cursor:pointer;padding:6px 4px 5px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    border-radius:14px;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.3);
+    transition:transform 160ms,background-color 160ms,border-color 160ms;
+  }
+  #hero-strip button:hover{transform:translateY(-4px);background:rgba(255,255,255,.26)}
+  #hero-strip button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  #hero-strip button[aria-current="true"]{background:#fff;border-color:#fff;transform:translateY(-6px)}
+  #hero-strip button[aria-current="true"] small{color:#2a2118}
+  #hero-strip button svg{width:30px;height:34px;display:block}
+  #hero-strip button small{font-size:9.5px;font-weight:800;line-height:1.15;text-align:center;
+    max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #hero-strip .padlock{position:absolute;margin-top:-4px;font-size:11px}
+
+  @media (max-width:760px){
+    #hero-ghost{top:9%;font-size:clamp(52px,19vw,150px)}
+    #hero-stage .figure{width:min(34vw,165px);bottom:96px}
+    /* màn nhỏ: chỉ giữ Mầm giữa — dãy ảnh dưới đáy đã lo việc chuyển câu */
+    #hero-stage .figure.side,#hero-stage .figure.back{display:none}
+    #hero-stage .figure.center{transform:translateX(-50%) scale(1.12)}
+    #hero-stage .figure.side{transform:translateX(-50%) scale(.5)}
+    #hero-stage .figure.left{left:20%} #hero-stage .figure.right{left:80%}
+    #hero-stage .figure.back{transform:translateX(-50%) scale(.38)}
+    #hero-info{bottom:222px;max-width:88vw}
+    #hero-go{bottom:98px;right:16px}
+    #hero-subs{top:50px;left:0;right:0;transform:none;justify-content:flex-start;
+      flex-wrap:nowrap;overflow-x:auto;max-width:100vw;padding:0 14px;scrollbar-width:none}
+    #hero-subs::-webkit-scrollbar{display:none}
+    #hero-subs button{flex:none}
+    #hero-ghost{top:16%}
+    #hero-arrows{margin-top:12px}
+    #hero-arrows button{width:50px;height:50px}
+    #hero-brand{top:18px}
+  }
   /* ───── 1 · KHU VƯỜN ───── */
   #scr-map .wrap{flex:1;display:grid;place-items:center;padding:14px;min-height:0}
   #scr-map svg{width:min(96vw,980px);max-height:92vh;border-radius:22px;border:4px solid var(--ink);
@@ -264,12 +358,34 @@
 <!-- ════════ 1 · BẢN ĐỒ ════════ -->
 <!-- ════════ 0 · CHỌN CHỦ ĐỀ ════════ -->
 <section id="scr-topic" class="screen on">
-  <div class="topic-wrap">
-    <h1 class="stick" style="transform:rotate(-1deg);font-size:24px">Hôm nay bạn tò mò chuyện gì?</h1>
-    <p class="topic-sub">Chạm vào một câu hỏi là lên đường luôn</p>
-    <div class="subrow" id="subrow"></div>
-    <div class="cards" id="cardbox"></div>
+  <div id="hero-grain"></div>
+  <div id="hero-ghost" aria-hidden="true"></div>
+  <div id="hero-brand">Thế giới học liệu</div>
+  <div id="hero-subs" role="group" aria-label="Chọn môn"></div>
+  <div id="hero-stage" aria-hidden="true"></div>
+  <div id="hero-scrim"></div>
+
+  <div id="hero-info">
+    <span class="mon" id="hero-mon"></span>
+    <h2 id="hero-hoi"></h2>
+    <p class="lop" id="hero-lop"></p>
+    <p class="lock" id="hero-lock"></p>
+    <div id="hero-arrows">
+      <button type="button" id="hero-prev" aria-label="Câu trước">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      </button>
+      <button type="button" id="hero-next" aria-label="Câu sau">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
   </div>
+
+  <button type="button" id="hero-go">
+    <span id="hero-go-txt">Đi thôi</span>
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </button>
+
+  <div id="hero-strip" role="tablist" aria-label="Tất cả câu hỏi"></div>
 </section>
 
 
@@ -1457,55 +1573,146 @@ const UI = (function(){
   function showScreen(id){
     for (const sid of SCREENS) $('#' + sid).classList.toggle('on', sid === id);
   }
-  function goTopic(){ showScreen('scr-topic'); }
+  function goTopic(){ showScreen('scr-topic'); renderTopics(); }  // vẽ lại thẻ — xoá trạng thái mờ của thẻ vừa bấm
 
-  /* ── Kho câu hỏi: nhiều môn, chạm câu nào cũng đi được, không khoá ── */
+  /* ── Kho câu hỏi: 4 môn, thẻ nào có game thì vào được ── */
   const TOPICS = [
-    { mon:'Sinh học', ico:'🧬', hoi:'Làm sao tế bào biết phải làm việc gì?', lop:'Sinh 10', game:true },
-    { mon:'Sinh học', ico:'🌿', hoi:'Cây ăn gì để sống?',                    lop:'Sinh 11' },
-    { mon:'Sinh học', ico:'❤️', hoi:'Vì sao tim đập cả đời không nghỉ?',     lop:'Sinh 8' },
-    { mon:'Sinh học', ico:'🦠', hoi:'Vi khuẩn bé cỡ nào mà làm mình ốm?',    lop:'Sinh 10' },
-    { mon:'Vật lý',   ico:'⚡', hoi:'Điện trong nhà chạy từ đâu tới?',        lop:'KHTN 8' },
-    { mon:'Vật lý',   ico:'🧲', hoi:'Nam châm hút được những thứ gì?',        lop:'KHTN 7' },
-    { mon:'Vật lý',   ico:'🌈', hoi:'Cầu vồng từ đâu ra?',                    lop:'KHTN 9' },
-    { mon:'Hóa học',  ico:'🧂', hoi:'Muối tan đi đâu trong cốc nước?',        lop:'KHTN 8' },
-    { mon:'Hóa học',  ico:'🔥', hoi:'Lửa ăn gì mà cháy mãi?',                 lop:'KHTN 8' },
-    { mon:'Địa lý',   ico:'🌋', hoi:'Núi lửa phun vì cái gì?',                lop:'Địa 10' },
-    { mon:'Địa lý',   ico:'🌧️', hoi:'Mưa từ đâu rơi xuống?',                 lop:'Địa 6' }
+    { mon:'Sinh học', hoi:'Làm sao tế bào biết phải làm việc gì?', lop:'Sinh học 10', game:true },
+    { mon:'Sinh học', hoi:'Cây ăn gì để sống?',                    lop:'Sinh học 11' },
+    { mon:'Sinh học', hoi:'Vì sao tim đập cả đời không nghỉ?',      lop:'Sinh học 8' },
+    { mon:'Sinh học', hoi:'Vi khuẩn bé cỡ nào mà làm mình ốm?',     lop:'Sinh học 10' },
+    { mon:'Vật lý',   hoi:'Điện trong nhà chạy từ đâu tới?',        lop:'KHTN 8' },
+    { mon:'Vật lý',   hoi:'Nam châm hút được những thứ gì?',        lop:'KHTN 7' },
+    { mon:'Vật lý',   hoi:'Cầu vồng từ đâu ra?',                    lop:'KHTN 9' },
+    { mon:'Hóa học',  hoi:'Muối tan đi đâu trong cốc nước?',        lop:'KHTN 8' },
+    { mon:'Hóa học',  hoi:'Lửa ăn gì mà cháy mãi?',                 lop:'KHTN 8' },
+    { mon:'Địa lý',   hoi:'Núi lửa phun vì cái gì?',                lop:'Địa lý 10' },
+    { mon:'Địa lý',   hoi:'Mưa từ đâu rơi xuống?',                  lop:'Địa lý 6' }
   ];
-  const MON_COLOR = { 'Sinh học':'#3fae6b', 'Vật lý':'#3f8fe8', 'Hóa học':'#ea5fae', 'Địa lý':'#f0862c' };
-  let curMon = 'Tất cả';
+  // mỗi môn một bộ đồ cho Mầm + một màu nền
+  const MON_KIT = {
+    'Sinh học': { bg:'#2f7f55', ghost:'SINH HỌC', do:'blouse' },
+    'Vật lý'  : { bg:'#2b62a8', ghost:'VẬT LÝ',   do:'mubaoho' },
+    'Hóa học' : { bg:'#a53c73', ghost:'HÓA HỌC',  do:'kinhbaoho' },
+    'Địa lý'  : { bg:'#a85717', ghost:'ĐỊA LÝ',   do:'muco' }
+  };
 
-  function pickSubject(mon){
-    curMon = mon;
-    renderTopics();
+  /* Mầm cỡ lớn cho màn chọn — có thân người, đổi trang phục theo môn.
+     Vẽ trong hộp 100×160, giữ đúng nét paper-craft của Mầm nhỏ trong game. */
+  // Trang phục tách hai lớp: `than` vẽ TRƯỚC đầu, `dau` vẽ SAU đầu
+  // (nếu vẽ mũ/kính trước thì đầu Mầm sẽ che mất).
+  const OUTFIT = {
+    blouse: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#fdfbf4" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M50 104v38" stroke="#12324f" stroke-width="2.6"/>' +
+            '<rect x="59" y="116" width="14" height="11" rx="2.6" fill="#cfe7ee" stroke="#12324f" stroke-width="2.6"/>',
+      dau: ''
+    },
+    mubaoho: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#ffd97a" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M32 108h36v7H32Z" fill="#e8a13c" stroke="#12324f" stroke-width="2.6"/>',
+      dau: '<path d="M20 62q30-30 60 0l-5 8H25Z" fill="#f2b722" stroke="#12324f" stroke-width="3.4"/>' +
+           '<rect x="14" y="62" width="72" height="9" rx="4.5" fill="#f2b722" stroke="#12324f" stroke-width="3.2"/>' +
+           '<path d="M50 34v10" stroke="#12324f" stroke-width="3" stroke-linecap="round"/>'
+    },
+    kinhbaoho: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#fdfbf4" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M38 100h24v8H38Z" fill="#bfe8f5" stroke="#12324f" stroke-width="2.6"/>',
+      dau: '<rect x="24" y="56" width="52" height="21" rx="10" fill="#bfe8f5" opacity=".82" stroke="#12324f" stroke-width="3.2"/>' +
+           '<path d="M24 66h-7M76 66h7" stroke="#12324f" stroke-width="3.2" stroke-linecap="round"/>' +
+           '<path d="M50 56v21" stroke="#12324f" stroke-width="2.4" opacity=".5"/>'
+    },
+    muco: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#e8dcc0" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M34 112h32v6H34Z" fill="#c9a86a" stroke="#12324f" stroke-width="2.6"/>',
+      dau: '<ellipse cx="50" cy="52" rx="42" ry="12" fill="#e3c98d" stroke="#12324f" stroke-width="3.4"/>' +
+           '<path d="M28 52q6-26 22-26t22 26Z" fill="#eed9a6" stroke="#12324f" stroke-width="3.4"/>' +
+           '<path d="M28 48h44" stroke="#c9a86a" stroke-width="3.4"/>'
+    }
+  };
+
+  function mamBig(kit){
+    const o = OUTFIT[kit.do];
+    return '<svg viewBox="0 0 100 160" aria-hidden="true">' +
+      '<ellipse cx="50" cy="152" rx="30" ry="7" fill="rgba(20,14,8,.22)"/>' +
+      '<path d="M44 132h5v20h-5ZM53 132h5v20h-5Z" fill="#4a6b86" stroke="#12324f" stroke-width="3"/>' +
+      '<path d="M35 147h18v7H35ZM48 147h18v7H48Z" fill="#2a4a63" stroke="#12324f" stroke-width="3"/>' +
+      o.than +
+      '<path d="M28 100q-11 12-9 27" fill="none" stroke="#12324f" stroke-width="3.4" stroke-linecap="round"/>' +
+      '<path d="M72 100q11 12 9 27" fill="none" stroke="#12324f" stroke-width="3.4" stroke-linecap="round"/>' +
+      '<path d="M50 40q-19-2-23-17 17-6 23 8Z" fill="#7ec96a" stroke="#1d5a2e" stroke-width="3"/>' +
+      '<path d="M50 40q19-2 23-17-17-6-23 8Z" fill="#7ec96a" stroke="#1d5a2e" stroke-width="3"/>' +
+      '<circle cx="50" cy="70" r="31" fill="#4a9df0" stroke="#12324f" stroke-width="3.6"/>' +
+      '<ellipse cx="50" cy="72" rx="22" ry="23" fill="#fdfbf4" stroke="#12324f" stroke-width="3"/>' +
+      '<circle cx="40" cy="68" r="10" fill="none" stroke="#12324f" stroke-width="2.8"/>' +
+      '<circle cx="60" cy="68" r="10" fill="none" stroke="#12324f" stroke-width="2.8"/>' +
+      '<circle cx="40" cy="68" r="4.4" fill="#12324f"/><circle cx="60" cy="68" r="4.4" fill="#12324f"/>' +
+      '<path d="M42 85q8 8 16 0q-8 5-16 0Z" fill="#e8657f" stroke="#12324f" stroke-width="2.6"/>' +
+      '<path d="M38 96l12 12 12-12q-12 6-24 0Z" fill="#e4453c" stroke="#12324f" stroke-width="2.8"/>' +
+      o.dau +
+      '</svg>';
   }
+
+  let curMon = 'Tất cả', heroIdx = 0, heroBusy = false;
+  const heroList = () => TOPICS.map((t, i) => ({ ...t, i }))
+    .filter(t => curMon === 'Tất cả' || t.mon === curMon);
+
+  function pickSubject(mon){ curMon = mon; heroIdx = 0; renderTopics(); }
+
+  function heroNav(dir){
+    if (heroBusy) return;
+    const n = heroList().length;
+    if (n < 2) return;
+    heroBusy = true;
+    heroIdx = (heroIdx + (dir === 'next' ? 1 : n - 1)) % n;
+    paintHero();
+    setTimeout(function(){ heroBusy = false; }, 660);
+  }
+  function heroJump(k){ if (heroBusy || k === heroIdx) return; heroIdx = k; paintHero(); }
+
   function renderTopics(){
-    const row = $('#subrow');
-    const mons = ['Tất cả', ...new Set(TOPICS.map(t => t.mon))];
-    row.innerHTML = mons.map(m =>
-      `<button class="subchip${m === curMon ? ' on' : ''}" style="--mc:${MON_COLOR[m] || '#8a7a66'}"
-        onclick="UI.pickSubject('${m}')">${m}</button>`).join('');
-    const box = $('#cardbox');
-    box.innerHTML = TOPICS.map((t, i) => {
-      if (curMon !== 'Tất cả' && t.mon !== curMon) return '';
-      if (t.game) return `<button class="tcard" style="--mc:${MON_COLOR[t.mon]}" onclick="UI.chooseTopic(${i}, this)">
-        <span class="tico">${t.ico}</span>
-        <b>${t.hoi}</b>
-        <small>${t.mon} · ${t.lop}</small>
-        <span class="tgo">Đi thôi →</span>
-      </button>`;
-      return `<button class="tcard locked" style="--mc:${MON_COLOR[t.mon]}" disabled>
-        <span class="tico">${t.ico}</span>
-        <b>${t.hoi}</b>
-        <small>${t.mon} · ${t.lop}</small>
-        <span class="tgo">🔒 Chưa mở</span>
-      </button>`;
-    }).join('');
+    const list = heroList();
+    const subs = ['Tất cả'].concat([...new Set(TOPICS.map(t => t.mon))]);
+    $('#hero-subs').innerHTML = subs.map(m =>
+      '<button type="button" aria-pressed="' + (m === curMon) + '" onclick="UI.pickSubject(\'' + m + '\')">' + m + '</button>'
+    ).join('');
+    $('#hero-stage').innerHTML = list.map((t, k) =>
+      '<div class="figure" data-k="' + k + '">' + mamBig(MON_KIT[t.mon]) + '</div>').join('');
+    $('#hero-strip').innerHTML = list.map((t, k) =>
+      '<button type="button" role="tab" aria-current="' + (k === heroIdx) + '"' +
+      ' aria-label="' + t.hoi + (t.game ? '' : ' — chưa mở') + '" onclick="UI.heroJump(' + k + ')">' +
+      mamBig(MON_KIT[t.mon]) + '<small>' + (t.game ? t.mon : '🔒 ' + t.mon) + '</small></button>').join('');
+    paintHero();
   }
-  function chooseTopic(i, el){
-    if (el){ el.classList.add('picked'); }
-    setTimeout(() => goGarden(), 260);
+
+  function paintHero(){
+    const list = heroList();
+    if (!list.length) return;
+    const n = list.length;
+    if (heroIdx >= n) heroIdx = 0;
+    const cur = list[heroIdx], kit = MON_KIT[cur.mon];
+    $('#scr-topic').style.setProperty('--hero-bg', kit.bg);
+    $('#hero-ghost').textContent = kit.ghost;
+    $('#hero-mon').textContent = cur.mon;
+    $('#hero-hoi').textContent = cur.hoi;
+    $('#hero-lop').textContent = cur.lop;
+    $('#hero-lock').textContent = cur.game ? '' : 'Bài này chưa mở — chọn câu khác nhé';
+    const go = $('#hero-go');
+    go.disabled = !cur.game;
+    $('#hero-go-txt').textContent = cur.game ? 'Đi thôi' : 'Chưa mở';
+    go.onclick = cur.game ? function(){ goGarden(); } : null;
+    const L = (heroIdx + n - 1) % n, R = (heroIdx + 1) % n, B = (heroIdx + 2) % n;
+    document.querySelectorAll('#hero-stage .figure').forEach(function(el){
+      const k = +el.dataset.k;
+      const role = k === heroIdx ? 'center' : k === L ? 'side left' : k === R ? 'side right' : 'back';
+      el.className = 'figure ' + role;
+      const shown = (k === heroIdx || k === L || k === R || (n > 3 && k === B));
+      el.style.opacity = shown ? '' : '0';
+      el.style.visibility = shown ? '' : 'hidden';
+    });
+    const btns = document.querySelectorAll('#hero-strip button');
+    btns.forEach(function(b, k){ b.setAttribute('aria-current', k === heroIdx); });
+    if (btns[heroIdx]) btns[heroIdx].scrollIntoView({ block:'nearest', inline:'center', behavior:'smooth' });
   }
 
   /* khu vườn: Mầm đi bộ tới nhà bài học */
@@ -1644,12 +1851,19 @@ const UI = (function(){
   window.__sim = () => sim;   // cho probe sâu
 
   /* ---------- khởi động ---------- */
+  $('#hero-prev').addEventListener('click', () => heroNav('prev'));
+  $('#hero-next').addEventListener('click', () => heroNav('next'));
   $('#btnRun').addEventListener('click', toggleRun);
   $('#btnReset').addEventListener('click', resetShift);
   // Phím điều khiển: mũi tên đi, Enter đặt/gỡ, 1-7 lấy máy, Esc trả máy
   const KEY_ORDER = Object.keys(SIM.ORGS);
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape'){ dropCarry(); hideInfo(); return; }
+    if ($('#scr-topic').classList.contains('on')){
+      if (e.key === 'ArrowLeft'){ heroNav('prev'); e.preventDefault(); }
+      if (e.key === 'ArrowRight'){ heroNav('next'); e.preventDefault(); }
+      return;
+    }
     const playOn = $('#scr-play').classList.contains('on');
     const mapOn = $('#scr-map').classList.contains('on');
     if (e.key.startsWith('Arrow') && (playOn || mapOn)){ keys.add(e.key); e.preventDefault(); return; }
@@ -1675,7 +1889,7 @@ const UI = (function(){
   buildScene(); buildTray(); drawMam('calm'); drawMapTree(); renderTopics();
   raf = requestAnimationFrame(loop);
 
-  return { goPlay, goMap, goTopic, goGarden, gardenGo, chooseTopic, pickSubject, replay, doneToMap, hideInfo };
+  return { goPlay, goMap, goTopic, goGarden, gardenGo, pickSubject, heroNav, heroJump, replay, doneToMap, hideInfo };
 })();
 </script>
 </body>
