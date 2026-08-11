@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xưởng lắp tế bào — Thế Giới Học Liệu</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#eef2f6; --panel:#ffffff; --ink:#1b2733; --muted:#6b7a8c;
+    --line:#dbe3ec; --accent:#2d7cfb; --accent-soft:#e7f0ff;
+    --good:#16b364; --warn:#ef6820; --danger:#d64550;
+    --gold:#eaaa08; --shadow:0 1px 2px rgba(16,32,52,.06),0 8px 24px rgba(16,32,52,.08);
+    --r:14px;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.55 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow:hidden;
+    touch-action:manipulation;
+  }
+  .screen{position:fixed;inset:0;display:none;flex-direction:column}
+  .screen.on{display:flex}
+
+  /* ---------- 1. BẢN ĐỒ ---------- */
+  #map{background:linear-gradient(#dff0fb,#eef6ee 55%,#e6efe2)}
+  .map-top{padding:18px 20px 6px;text-align:center}
+  .map-top h1{margin:0;font-size:19px;letter-spacing:-.2px}
+  .map-top p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .map-stage{flex:1;display:grid;place-items:center;padding:8px 12px 20px;min-height:0}
+  .map-stage svg{width:min(100%,760px);height:100%;max-height:100%}
+  .lot{cursor:pointer}
+  .lot .halo{opacity:0;transition:opacity .2s}
+  .lot:hover .halo,.lot:focus-visible .halo{opacity:1}
+  .lot.locked{cursor:default}
+  .lot-label{font-size:13px;font-weight:600;fill:#33445a;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+  .lot-sub{font-size:11px;fill:#6b7a8c;paint-order:stroke;stroke:#fff;stroke-width:3.5px}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .pin{animation:bob 2.2s ease-in-out infinite;transform-origin:center}
+
+  /* ---------- 2. MÀN CHƠI ---------- */
+  #play{background:var(--bg)}
+  .bar{
+    display:flex;align-items:center;gap:12px;padding:10px 14px;
+    background:var(--panel);border-bottom:1px solid var(--line);flex:none
+  }
+  .bar h2{margin:0;font-size:15px;font-weight:650;letter-spacing:-.2px}
+  .bar .sp{flex:1}
+  .gauge{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .gauge b{font-variant-numeric:tabular-nums;color:var(--ink);font-size:15px}
+  .gauge .tube{width:78px;height:8px;border-radius:99px;background:#e6ecf3;overflow:hidden}
+  .gauge .fill{height:100%;width:0;background:var(--good);border-radius:99px;transition:width .5s}
+  .btn{
+    border:1px solid var(--line);background:#fff;color:var(--ink);
+    padding:8px 14px;border-radius:10px;font:inherit;font-size:14px;font-weight:600;
+    cursor:pointer;transition:.15s;white-space:nowrap
+  }
+  .btn:hover{border-color:#c3cfdd;background:#f8fafc}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#1e6ae6}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+  .btn:disabled{opacity:.45;cursor:default}
+
+  .work{flex:1;display:grid;grid-template-columns:184px 1fr 250px;gap:12px;padding:12px;min-height:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);min-height:0}
+  .card h3{margin:0;padding:11px 13px 9px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+
+  /* khay */
+  #tray{display:flex;flex-direction:column;overflow:hidden}
+  .tray-list{flex:1;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:7px}
+  .chip{
+    display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:11px;
+    border:1px solid var(--line);background:#fff;cursor:grab;
+    transition:.14s;user-select:none;-webkit-user-select:none;touch-action:none
+  }
+  .chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .chip.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(45,124,251,.14)}
+  .chip.used{opacity:.32;pointer-events:none}
+  .chip svg{flex:none}
+  .chip span{font-size:13px;font-weight:600;line-height:1.25}
+
+  /* sân khấu */
+  #stage{position:relative;display:grid;place-items:center;overflow:hidden;padding:6px}
+  #cell{width:100%;height:100%}
+  .slot-ring{fill:rgba(255,255,255,.5);stroke:#b9c7d8;stroke-width:2;stroke-dasharray:6 6;transition:.2s}
+  .slot.hot .slot-ring{stroke:var(--accent);stroke-width:3;fill:var(--accent-soft);stroke-dasharray:none}
+  .slot.filled .slot-ring{stroke:transparent;fill:transparent}
+  .slot{cursor:pointer}
+  .slot-n{font-size:11px;fill:#9fb0c2;text-anchor:middle;font-weight:600}
+  .org-g{transition:opacity .3s}
+  .org-g.idle{opacity:.42}
+  .flowline{fill:none;stroke-width:5;stroke-linecap:round}
+  .flowline.live{stroke:var(--good);stroke-dasharray:9 11;animation:march .85s linear infinite}
+  .flowline.dead{stroke:#c2ccd8;stroke-dasharray:3 8;opacity:.7}
+  .flowline.atp{stroke:var(--gold);stroke-width:3.5;stroke-dasharray:5 9;animation:march 1.1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-40}}
+  .blocker{fill:none;stroke:var(--warn);stroke-width:3.5;stroke-linecap:round;animation:pulse 1.1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+
+  /* nhật ký */
+  #log{display:flex;flex-direction:column;overflow:hidden}
+  .log-body{flex:1;overflow-y:auto;padding:12px 13px;display:flex;flex-direction:column;gap:11px}
+  .say{display:flex;gap:9px;align-items:flex-start}
+  .say .av{flex:none;width:28px;height:28px;border-radius:50%;background:#ffe9c9;display:grid;place-items:center;font-size:15px}
+  .say p{margin:0;font-size:13.5px;line-height:1.5}
+  .say.sys p{color:var(--muted);font-size:12.5px}
+  .say.bad p{color:var(--danger)}
+  .say.ok p{color:#0f8a4d}
+  .info{padding:11px 12px;border-top:1px solid var(--line);background:#fbfcfe;font-size:12.5px;min-height:96px}
+  .info .nm{font-weight:700;font-size:13.5px;margin-bottom:3px}
+  .info .rw{color:var(--muted);margin-top:3px}
+  .info .rw b{color:var(--ink);font-weight:600}
+  .info .empty{color:#9fb0c2}
+
+  /* con trỏ kéo */
+  #ghost{position:fixed;pointer-events:none;z-index:90;transform:translate(-50%,-50%);display:none;filter:drop-shadow(0 6px 12px rgba(16,32,52,.28))}
+
+  /* ---------- 3. CHỐT CHẶNG ---------- */
+  #done{position:fixed;inset:0;background:rgba(20,32,48,.5);backdrop-filter:blur(3px);display:none;place-items:center;z-index:100;padding:16px}
+  #done.on{display:grid}
+  .sheet{
+    width:min(560px,100%);max-height:92vh;overflow-y:auto;background:#fff;border-radius:18px;
+    box-shadow:0 24px 60px rgba(12,24,40,.3);padding:24px 24px 20px
+  }
+  .sheet h2{margin:0 0 3px;font-size:21px;letter-spacing:-.3px}
+  .sheet .lead{margin:0 0 16px;color:var(--muted);font-size:14px}
+  .quote{display:flex;gap:11px;background:#fff8ec;border:1px solid #ffe0b0;border-radius:12px;padding:13px 14px;margin-bottom:14px}
+  .quote .av{flex:none;width:32px;height:32px;border-radius:50%;background:#ffe0b0;display:grid;place-items:center;font-size:17px}
+  .quote p{margin:0;font-size:14px;line-height:1.55}
+  .loot{display:flex;gap:9px;margin:0 0 16px;flex-wrap:wrap}
+  .loot div{
+    flex:1;min-width:112px;border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center;background:#fafcff
+  }
+  .loot b{display:block;font-size:19px;line-height:1.2}
+  .loot small{color:var(--muted);font-size:12px}
+  .src{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+  .src>button{
+    width:100%;text-align:left;padding:11px 13px;background:#f7f9fc;border:0;
+    font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;gap:8px;align-items:center
+  }
+  .src .body{display:none;padding:12px 14px;font-size:13.5px;border-top:1px solid var(--line);color:#33445a}
+  .src.open .body{display:block}
+  .src .body mark{background:#fff2b8;padding:0 2px;border-radius:3px}
+  .src .body .cite{margin-top:8px;font-size:11.5px;color:var(--muted)}
+  .acts{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+
+  @media (max-width:900px){
+    .work{grid-template-columns:1fr;grid-template-rows:1fr auto;padding:8px;gap:8px}
+    #tray{position:fixed;left:0;right:0;bottom:0;z-index:60;border-radius:16px 16px 0 0;max-height:44vh;
+          box-shadow:0 -8px 28px rgba(16,32,52,.16)}
+    #tray .tray-list{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:9px 10px 12px}
+    #tray .chip{flex-direction:column;min-width:78px;text-align:center;gap:5px;padding:9px 6px}
+    #tray .chip span{font-size:11.5px}
+    #log{max-height:132px}
+    .work{padding-bottom:118px}
+    #stage{grid-row:1}
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ 1. BẢN ĐỒ ══════════════ -->
+<section id="map" class="screen on">
+  <div class="map-top">
+    <h1>Thế giới Sinh học</h1>
+    <p>Chạm vào công trình đang sáng đèn để vào chặng</p>
+  </div>
+  <div class="map-stage">
+    <svg viewBox="0 0 760 430" preserveAspectRatio="xMidYMid meet" aria-label="Bản đồ thị trấn">
+      <defs>
+        <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a8d98f"/><stop offset="1" stop-color="#7fc06a"/>
+        </linearGradient>
+        <linearGradient id="rf" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5aa2f7"/><stop offset="1" stop-color="#2d7cfb"/>
+        </linearGradient>
+      </defs>
+
+      <!-- nền cỏ -->
+      <path d="M380 40 740 215 380 390 20 215Z" fill="url(#gr)"/>
+      <path d="M380 40 740 215 380 390 20 215Z" fill="none" stroke="#6cae58" stroke-width="2"/>
+      <!-- lưới ô -->
+      <g stroke="#8ec97a" stroke-width="1" opacity=".55">
+        <path d="M200 128 560 303M290 84 650 259M110 172 470 347"/>
+        <path d="M560 128 200 303M470 84 110 259M650 172 290 347"/>
+      </g>
+      <!-- đường -->
+      <path d="M380 390 380 300 240 228 240 180" fill="none" stroke="#e4d7b8" stroke-width="13" stroke-linecap="round"/>
+      <path d="M380 300 520 228 520 182" fill="none" stroke="#e4d7b8" stroke-width="13" stroke-linecap="round"/>
+      <!-- sông -->
+      <path d="M20 215 130 272 250 258 360 320" fill="none" stroke="#8fcaf0" stroke-width="11" stroke-linecap="round" opacity=".85"/>
+
+      <!-- Viện Sinh học: MỞ -->
+      <g class="lot" tabindex="0" role="button" aria-label="Vào chặng Viện Sinh học" onclick="goPlay()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPlay()}">
+        <ellipse class="halo" cx="240" cy="196" rx="72" ry="38" fill="#fff" opacity="0"/>
+        <ellipse cx="240" cy="200" rx="56" ry="27" fill="#000" opacity=".1"/>
+        <path d="M240 160 292 189 292 205 240 234 188 205 188 189Z" fill="#cfe0f2"/>
+        <path d="M188 189 240 160 292 189 240 218Z" fill="#eaf2fb"/>
+        <path d="M240 118 288 146 288 190 240 218 192 190 192 146Z" fill="#f3f7fc"/>
+        <path d="M192 146 240 118 288 146 240 174Z" fill="url(#rf)"/>
+        <path d="M192 146v44l48 28v-44Z" fill="#dce8f5"/>
+        <path d="M288 146v44l-48 28v-44Z" fill="#c6d8ec"/>
+        <circle cx="240" cy="152" r="9" fill="#fff" opacity=".9"/>
+        <circle cx="240" cy="152" r="4" fill="#2d7cfb"/>
+        <g class="pin"><circle cx="240" cy="96" r="12" fill="#16b364"/><path d="M235 96l4 4 7-8" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+        <text class="lot-label" x="240" y="256" text-anchor="middle">Viện Sinh học</text>
+        <text class="lot-sub" x="240" y="272" text-anchor="middle">Chặng 1 · Xưởng lắp tế bào</text>
+      </g>
+
+      <!-- 2 công trình khoá -->
+      <g class="lot locked" opacity=".62">
+        <ellipse cx="520" cy="198" rx="46" ry="22" fill="#000" opacity=".08"/>
+        <path d="M520 166 562 190 562 202 520 226 478 202 478 190Z" fill="#cfd8e2"/>
+        <path d="M478 190 520 166 562 190 520 214Z" fill="#e6ecf3"/>
+        <g stroke="#a9b6c4" stroke-width="3" fill="none" stroke-linecap="round">
+          <path d="M496 190v-30M544 190v-30M496 168h48M504 160v34M536 160v34"/>
+        </g>
+        <text class="lot-label" x="520" y="248" text-anchor="middle">Vườn thực nghiệm</text>
+        <text class="lot-sub" x="520" y="264" text-anchor="middle">Chưa mở</text>
+      </g>
+      <g class="lot locked" opacity=".62">
+        <ellipse cx="380" cy="322" rx="40" ry="19" fill="#000" opacity=".08"/>
+        <path d="M380 296 416 316 416 326 380 346 344 326 344 316Z" fill="#cfd8e2"/>
+        <path d="M344 316 380 296 416 316 380 336Z" fill="#e6ecf3"/>
+        <text class="lot-label" x="380" y="366" text-anchor="middle">Phòng tiêu bản</text>
+        <text class="lot-sub" x="380" y="382" text-anchor="middle">Chưa mở</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- ══════════════ 2. MÀN CHƠI ══════════════ -->
+<section id="play" class="screen">
+  <div class="bar">
+    <button class="btn ghost" onclick="goMap()">← Bản đồ</button>
+    <h2>Xưởng lắp tế bào</h2>
+    <div class="sp"></div>
+    <div class="gauge" title="Sản lượng protein xuất ra khỏi tế bào">
+      <span>Sản lượng</span>
+      <div class="tube"><div class="fill" id="fill"></div></div>
+      <b id="out">0</b>
+    </div>
+    <button class="btn" id="btnReset">Dọn bàn</button>
+    <button class="btn primary" id="btnRun">Chạy thử</button>
+  </div>
+
+  <div class="work">
+    <div class="card" id="tray">
+      <h3>Khay bào quan</h3>
+      <div class="tray-list" id="trayList"></div>
+    </div>
+
+    <div class="card" id="stage">
+      <svg id="cell" viewBox="0 0 620 520" preserveAspectRatio="xMidYMid meet" aria-label="Tế bào"></svg>
+    </div>
+
+    <div class="card" id="log">
+      <h3>Nhật ký xưởng</h3>
+      <div class="log-body" id="logBody"></div>
+      <div class="info" id="info"><span class="empty">Chạm vào một bào quan trong khay để xem nó làm gì.</span></div>
+    </div>
+  </div>
+</section>
+
+<svg id="ghost" width="76" height="76" viewBox="0 0 76 76"></svg>
+
+<!-- ══════════════ 3. CHỐT CHẶNG ══════════════ -->
+<div id="done">
+  <div class="sheet">
+    <h2>Dây chuyền đã chạy</h2>
+    <p class="lead">Chặng 1 · Xưởng lắp tế bào · <span id="tMin">—</span></p>
+
+    <div class="quote">
+      <div class="av">🧔</div>
+      <p id="debrief"></p>
+    </div>
+
+    <div class="loot">
+      <div><b>🧪 3</b><small>Mẫu vật</small></div>
+      <div><b>🔬 1</b><small>Kính hiển vi</small></div>
+      <div><b>🏛️ +1</b><small>Tầng Viện Sinh học</small></div>
+    </div>
+
+    <div class="src" id="src">
+      <button onclick="document.getElementById('src').classList.toggle('open')">📄 Xem lại trong bài</button>
+      <div class="body">
+        <p>… Trong tế bào, <mark>ribosome</mark> là nơi tổng hợp protein. Ribosome đọc thông tin trên
+        <mark>mARN</mark> do nhân tạo ra, rồi lắp các axit amin thành chuỗi polypeptide. Chuỗi này sau đó
+        được đưa sang lưới nội chất hạt để gấp lại đúng hình dạng, rồi chuyển tiếp tới bộ máy Golgi để
+        đóng gói trước khi tiết ra ngoài. Quá trình này tiêu tốn năng lượng, và năng lượng đó đến từ
+        <mark>ti thể</mark> dưới dạng ATP …</p>
+        <div class="cite">Nguồn: <b>Sinh học 10 — Bài 8: Tế bào nhân thực</b>, trang 47, đoạn 3</div>
+      </div>
+    </div>
+
+    <div class="acts">
+      <button class="btn" onclick="closeDone()">Chơi lại</button>
+      <button class="btn primary" onclick="closeDone();goMap()">Về bản đồ →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   DỮ LIỆU — ở bản thật, phần này là "bản trích" bóc từ kho học liệu.
+   Ở bản dựng thử thì viết cứng.
+   ═══════════════════════════════════════════════════════════ */
+
+const FACT = {
+  marn:  'mARN',
+  atp:   'ATP',
+  tho:   'chuỗi protein thô',
+  gap:   'protein đã gấp',
+  goi:   'protein đã đóng gói',
+  xuat:  'protein tiết ra ngoài'
+};
+
+const ORGANELLES = [
+  { id:'nhan',  ten:'Nhân',                 lam:'Giữ ADN và tạo ra mARN',                  can:[],              tao:['marn'], color:'#7a5af8' },
+  { id:'tithe', ten:'Ti thể',               lam:'Hô hấp tế bào, sinh năng lượng',          can:[],              tao:['atp'],  color:'#ef6820' },
+  { id:'ribo',  ten:'Ribosome',             lam:'Đọc mARN, lắp thành chuỗi protein',       can:['marn','atp'],  tao:['tho'],  color:'#16b364' },
+  { id:'lnc',   ten:'Lưới nội chất hạt',    lam:'Gấp chuỗi protein cho đúng hình dạng',    can:['tho'],         tao:['gap'],  color:'#2d7cfb' },
+  { id:'golgi', ten:'Bộ máy Golgi',         lam:'Đóng gói protein thành túi',              can:['gap','atp'],   tao:['goi'],  color:'#ee46bc' },
+  { id:'tuiti', ten:'Túi tiết',             lam:'Đưa protein ra khỏi tế bào',              can:['goi'],         tao:['xuat'], color:'#06a6c2' },
+  { id:'lyso',  ten:'Lysosome',             lam:'Chứa enzyme tiêu hoá, dọn rác trong tế bào', can:[],           tao:[],       color:'#d64550',
+                 canhbao:'Đặt sát nhân thì enzyme sẽ tiêu luôn nhân.' },
+  { id:'lucla', ten:'Lục lạp',              lam:'Quang hợp — chỉ có ở tế bào thực vật',    can:[],              tao:[],       color:'#0f8a4d',
+                 canhbao:'Tế bào động vật không có bào quan này.' }
+];
+
+const ORG = Object.fromEntries(ORGANELLES.map(o => [o.id, o]));
+const CHAIN = ['nhan','ribo','lnc','golgi','tuiti'];        // dòng chảy chính
+const ATP_USERS = ['ribo','golgi'];                          // nhánh năng lượng
+
+/* 6 ô xếp thành vòng — hai ô cạnh nhau trong vòng là "sát nhau" */
+const SLOTS = [
+  {x:310, y:118}, {x:466, y:206}, {x:466, y:382},
+  {x:310, y:452}, {x:154, y:382}, {x:154, y:206}
+];
+const near = (a,b) => { const d = Math.abs(a-b); return d===1 || d===SLOTS.length-1; };
+
+/* ═══════════════════════════════════════════════════════════
+   ĐỘNG CƠ MÔ PHỎNG
+   Không chấm đúng/sai. Chỉ lan truyền trạng thái tới khi không còn gì đổi.
+   ═══════════════════════════════════════════════════════════ */
+
+function propagate(board){
+  // board: mảng 6 phần tử, mỗi phần tử là id bào quan hoặc null
+
+  // 1. Tác động phá hoại: lysosome đặt cạnh nhân thì nhân ngừng hoạt động
+  const dead = new Set();
+  board.forEach((id,i) => {
+    if(id !== 'lyso') return;
+    board.forEach((jd,j) => { if(jd === 'nhan' && near(i,j)) dead.add(j); });
+  });
+
+  // 2. Lan truyền tới điểm bất động. Ngưỡng vòng lặp TỈ LỆ số đỉnh —
+  //    để hằng số sẽ âm thầm cắt cụt chuỗi dài mà không báo lỗi.
+  const facts = new Set();
+  const live  = new Set();
+  const maxRounds = board.length * 2 + 16;
+  let rounds = 0, changed = true;
+
+  while(changed){
+    changed = false;
+    if(++rounds > maxRounds) return { facts, live, dead, converged:false };
+    board.forEach((id,i) => {
+      if(!id || dead.has(i) || live.has(i)) return;
+      const o = ORG[id];
+      if(!o.can.every(f => facts.has(f))) return;    // 'all' — cần đủ mọi đầu vào
+      live.add(i);
+      o.tao.forEach(f => { if(!facts.has(f)){ facts.add(f); changed = true; } });
+      if(!o.tao.length) changed = true;
+    });
+  }
+  return { facts, live, dead, converged:true };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HÌNH VẼ BÀO QUAN
+   ═══════════════════════════════════════════════════════════ */
+
+function icon(id, s){
+  const k = s/48, c = ORG[id].color;
+  const g = b => `<g transform="scale(${k})">${b}</g>`;
+  switch(id){
+    case 'nhan': return g(`<circle cx="24" cy="24" r="20" fill="${c}" opacity=".2"/>
+      <circle cx="24" cy="24" r="20" fill="none" stroke="${c}" stroke-width="2.5"/>
+      <circle cx="24" cy="24" r="8" fill="${c}"/>
+      <circle cx="14" cy="16" r="2" fill="${c}" opacity=".65"/><circle cx="34" cy="17" r="1.8" fill="${c}" opacity=".65"/>
+      <circle cx="33" cy="33" r="2.2" fill="${c}" opacity=".65"/><circle cx="14" cy="32" r="1.6" fill="${c}" opacity=".65"/>`);
+    case 'tithe': return g(`<ellipse cx="24" cy="24" rx="21" ry="13" fill="${c}" opacity=".2"/>
+      <ellipse cx="24" cy="24" rx="21" ry="13" fill="none" stroke="${c}" stroke-width="2.5"/>
+      <path d="M8 24c4-7 6 7 10 0s6 7 10 0 6 7 10 0" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>`);
+    case 'ribo': return g(`<circle cx="17" cy="21" r="8.5" fill="${c}"/><circle cx="30" cy="27" r="7" fill="${c}" opacity=".7"/>
+      <circle cx="14" cy="34" r="3.6" fill="${c}" opacity=".5"/><circle cx="36" cy="15" r="3" fill="${c}" opacity=".5"/>`);
+    case 'lnc': return g(`<path d="M7 13h34M9 22h32M7 31h34M9 40h30" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round"/>
+      <g fill="${c}" opacity=".8"><circle cx="13" cy="9" r="2.1"/><circle cx="24" cy="9" r="2.1"/><circle cx="35" cy="9" r="2.1"/>
+      <circle cx="16" cy="27" r="2.1"/><circle cx="30" cy="27" r="2.1"/><circle cx="20" cy="36" r="2.1"/><circle cx="33" cy="36" r="2.1"/></g>`);
+    case 'golgi': return g(`<g fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round">
+      <path d="M10 13q14-6 28 0"/><path d="M9 22q15-6 30 0"/><path d="M11 31q13-6 26 0"/><path d="M14 39q10-5 20 0"/></g>
+      <circle cx="8" cy="42" r="3" fill="${c}" opacity=".7"/><circle cx="40" cy="43" r="2.4" fill="${c}" opacity=".7"/>`);
+    case 'tuiti': return g(`<circle cx="24" cy="24" r="17" fill="${c}" opacity=".2"/>
+      <circle cx="24" cy="24" r="17" fill="none" stroke="${c}" stroke-width="2.5" stroke-dasharray="4 3"/>
+      <circle cx="20" cy="21" r="3.4" fill="${c}"/><circle cx="29" cy="26" r="2.8" fill="${c}"/><circle cx="22" cy="31" r="2.4" fill="${c}"/>`);
+    case 'lyso': return g(`<circle cx="24" cy="24" r="18" fill="${c}" opacity=".22"/>
+      <circle cx="24" cy="24" r="18" fill="none" stroke="${c}" stroke-width="2.5"/>
+      <g fill="${c}"><circle cx="19" cy="20" r="2.6"/><circle cx="29" cy="22" r="2.2"/><circle cx="24" cy="30" r="2.8"/>
+      <circle cx="31" cy="30" r="1.8"/><circle cx="17" cy="28" r="1.7"/></g>`);
+    case 'lucla': return g(`<ellipse cx="24" cy="24" rx="21" ry="14" fill="${c}" opacity=".2"/>
+      <ellipse cx="24" cy="24" rx="21" ry="14" fill="none" stroke="${c}" stroke-width="2.5"/>
+      <g fill="${c}"><rect x="12" y="19" width="8" height="10" rx="2.5"/><rect x="24" y="16" width="8" height="10" rx="2.5" opacity=".75"/>
+      <rect x="30" y="27" width="7" height="8" rx="2.5" opacity=".6"/></g>`);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TRẠNG THÁI + GIAO DIỆN
+   ═══════════════════════════════════════════════════════════ */
+
+const NS = 'http://www.w3.org/2000/svg';
+let board = Array(SLOTS.length).fill(null);
+let picked = null, running = false, output = 0, tick = null, startedAt = null;
+
+const $  = s => document.querySelector(s);
+const el = (t,a={}) => { const n = document.createElementNS(NS,t); for(const k in a) n.setAttribute(k,a[k]); return n; };
+
+function say(text, kind=''){
+  const b = $('#logBody');
+  const d = document.createElement('div');
+  d.className = 'say ' + kind;
+  d.innerHTML = (kind === 'sys' ? '' : '<div class="av">🧔</div>') + '<p></p>';
+  d.querySelector('p').textContent = text;
+  b.appendChild(d); b.scrollTop = b.scrollHeight;
+}
+
+function showInfo(id){
+  const box = $('#info');
+  if(!id){ box.innerHTML = '<span class="empty">Chạm vào một bào quan trong khay để xem nó làm gì.</span>'; return; }
+  const o = ORG[id];
+  const list = a => a.length ? a.map(f => FACT[f]).join(', ') : '—';
+  box.innerHTML =
+    `<div class="nm" style="color:${o.color}">${o.ten}</div>` +
+    `<div>${o.lam}</div>` +
+    `<div class="rw">Cần: <b>${list(o.can)}</b></div>` +
+    `<div class="rw">Tạo ra: <b>${list(o.tao)}</b></div>` +
+    (o.canhbao ? `<div class="rw" style="color:var(--warn);margin-top:5px">⚠ ${o.canhbao}</div>` : '');
+}
+
+function drawTray(){
+  const box = $('#trayList'); box.innerHTML = '';
+  ORGANELLES.forEach(o => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (board.includes(o.id) ? ' used' : '') + (picked === o.id ? ' sel' : '');
+    c.innerHTML = `<svg width="30" height="30" viewBox="0 0 30 30">${icon(o.id,30)}</svg><span>${o.ten}</span>`;
+    c.addEventListener('pointerdown', e => startDrag(e, o.id));
+    box.appendChild(c);
+  });
+}
+
+function drawCell(){
+  const sim = propagate(board);
+  const svg = $('#cell'); svg.innerHTML = '';
+  const on = running && sim.facts.has('xuat');
+
+  // màng + bào tương
+  const skin = el('ellipse',{cx:310,cy:285,rx:280,ry:225,
+    fill: on ? '#e8f8ef' : '#f2f5f8', stroke: on ? '#8fd9ae' : '#ccd7e3', 'stroke-width':5});
+  skin.style.transition = 'fill .6s, stroke .6s';
+  svg.appendChild(skin);
+  svg.appendChild(el('ellipse',{cx:310,cy:285,rx:268,ry:213,fill:'none',
+    stroke: on ? '#b9e8cd' : '#e0e8f0','stroke-width':2}));
+
+  const t = el('text',{x:310,y:38,'text-anchor':'middle','font-size':13,'font-weight':600,
+    fill: on ? '#0f8a4d' : '#9fb0c2'});
+  t.textContent = on ? 'Tế bào đang hoạt động' : 'Màng tế bào';
+  svg.appendChild(t);
+
+  // ── dòng chảy chính: nối các mắt xích theo đúng thứ tự sản xuất
+  const pos = id => { const i = board.indexOf(id); return i < 0 ? null : SLOTS[i]; };
+  if(running){
+    for(let k=0;k<CHAIN.length-1;k++){
+      const a = pos(CHAIN[k]), b = pos(CHAIN[k+1]);
+      if(!a || !b) continue;
+      const ia = board.indexOf(CHAIN[k]), ib = board.indexOf(CHAIN[k+1]);
+      const alive = sim.live.has(ia) && sim.live.has(ib);
+      const mx = (a.x+b.x)/2 + (b.y-a.y)*.14, my = (a.y+b.y)/2 - (b.x-a.x)*.14;
+      svg.appendChild(el('path',{d:`M${a.x} ${a.y}Q${mx} ${my} ${b.x} ${b.y}`,
+        class:'flowline ' + (alive ? 'live' : 'dead')}));
+      // chỗ dòng chảy đứt
+      if(sim.live.has(ia) && !sim.live.has(ib)){
+        const g = el('g',{transform:`translate(${(a.x+b.x)/2},${(a.y+b.y)/2})`});
+        g.appendChild(el('path',{d:'M-13 -13 13 13M13 -13-13 13',class:'blocker'}));
+        svg.appendChild(g);
+      }
+    }
+    // nhánh năng lượng
+    const ti = pos('tithe');
+    if(ti && sim.live.has(board.indexOf('tithe'))){
+      ATP_USERS.forEach(u => { const p = pos(u); if(p) svg.appendChild(
+        el('path',{d:`M${ti.x} ${ti.y}L${p.x} ${p.y}`,class:'flowline atp'})); });
+    }
+  }
+
+  // ── các ô
+  SLOTS.forEach((s,i) => {
+    const g = el('g',{class:'slot' + (board[i] ? ' filled' : ''), 'data-i':i});
+    g.appendChild(el('circle',{class:'slot-ring',cx:s.x,cy:s.y,r:44}));
+    if(!board[i]){
+      const n = el('text',{class:'slot-n',x:s.x,y:s.y+5}); n.textContent = 'ô ' + (i+1); g.appendChild(n);
+    } else {
+      const o = ORG[board[i]];
+      const idle = running && !sim.live.has(i) && o.tao.length > 0;
+      const inner = el('g',{class:'org-g' + (idle || sim.dead.has(i) ? ' idle' : ''),
+        transform:`translate(${s.x-30},${s.y-34})`});
+      inner.innerHTML = icon(board[i],60);
+      g.appendChild(inner);
+      const lb = el('text',{x:s.x,y:s.y+46,'text-anchor':'middle','font-size':12,'font-weight':600,
+        fill: sim.dead.has(i) ? '#d64550' : '#33445a'});
+      lb.textContent = sim.dead.has(i) ? o.ten + ' (bị tiêu)' : o.ten;
+      g.appendChild(lb);
+    }
+    g.addEventListener('pointerup', () => dropAt(i));
+    g.addEventListener('click', () => { if(!picked) removeAt(i); });
+    svg.appendChild(g);
+  });
+
+  return sim;
+}
+
+/* ── kéo thả (chạy được cả chuột lẫn cảm ứng) ── */
+function startDrag(e, id){
+  if(board.includes(id)) return;
+  e.preventDefault();
+  picked = id; showInfo(id); drawTray();
+  const gh = $('#ghost'); gh.innerHTML = icon(id,76); gh.style.display = 'block';
+  moveGhost(e);
+  window.addEventListener('pointermove', moveGhost);
+  window.addEventListener('pointerup', endDrag, {once:true});
+}
+function moveGhost(e){
+  const gh = $('#ghost'); gh.style.left = e.clientX + 'px'; gh.style.top = e.clientY + 'px';
+  const t = document.elementFromPoint(e.clientX, e.clientY);
+  document.querySelectorAll('.slot').forEach(s => s.classList.remove('hot'));
+  const slot = t && t.closest && t.closest('.slot');
+  if(slot && !board[+slot.dataset.i]) slot.classList.add('hot');
+}
+function endDrag(e){
+  window.removeEventListener('pointermove', moveGhost);
+  $('#ghost').style.display = 'none';
+  const t = document.elementFromPoint(e.clientX, e.clientY);
+  const slot = t && t.closest && t.closest('.slot');
+  if(slot) dropAt(+slot.dataset.i); else { picked = null; drawTray(); drawCell(); }
+  document.querySelectorAll('.slot').forEach(s => s.classList.remove('hot'));
+}
+
+function dropAt(i){
+  if(!picked || board[i]) { picked = null; drawTray(); return; }
+  board[i] = picked;
+  const o = ORG[picked]; picked = null;
+  say(`Đã đặt ${o.ten} vào ô ${i+1}.`, 'sys');
+  drawTray(); const sim = drawCell();
+  if(sim.dead.size) say('Lysosome nằm sát nhân. Enzyme của nó đang tiêu mất nhân.', 'bad');
+  if(running) evaluate(sim);
+}
+function removeAt(i){
+  if(!board[i]) return;
+  say(`Đã lấy ${ORG[board[i]].ten} ra khỏi ô ${i+1}.`, 'sys');
+  board[i] = null;
+  drawTray(); const sim = drawCell();
+  if(running) evaluate(sim);
+}
+
+/* ── chạy thử ── */
+function run(){
+  running = true; startedAt = startedAt || Date.now();
+  $('#btnRun').textContent = 'Dừng lại';
+  const sim = drawCell();
+  say('Bật dây chuyền.', 'sys');
+  evaluate(sim);
+}
+function stop(){
+  running = false; $('#btnRun').textContent = 'Chạy thử';
+  clearInterval(tick); tick = null; drawCell();
+}
+
+function evaluate(sim){
+  clearInterval(tick); tick = null;
+  if(!running) return;
+
+  if(sim.facts.has('xuat')){
+    if(!tick) tick = setInterval(() => {
+      output++; $('#out').textContent = output;
+      $('#fill').style.width = Math.min(100, output*8) + '%';
+      if(output === 12) finish();
+    }, 320);
+    say('Dòng chảy đi hết một vòng. Protein bắt đầu ra khỏi tế bào.', 'ok');
+    return;
+  }
+
+  // tìm mắt xích đầu tiên chưa chạy được và nói thiếu gì
+  for(const id of CHAIN){
+    const i = board.indexOf(id);
+    if(i < 0){ say(`Chưa có ${ORG[id].ten} trong tế bào. Dòng chảy dừng ở đây.`); return; }
+    if(sim.dead.has(i)){ say(`${ORG[id].ten} đã bị tiêu mất. Không còn gì đi tiếp.`, 'bad'); return; }
+    if(!sim.live.has(i)){
+      const thieu = ORG[id].can.filter(f => !sim.facts.has(f)).map(f => FACT[f]);
+      say(`${ORG[id].ten} nằm im vì chưa có ${thieu.join(' và ')}. Dòng chảy tắt ở đó.`);
+      return;
+    }
+  }
+}
+
+function finish(){
+  clearInterval(tick); tick = null; running = false;
+  $('#btnRun').textContent = 'Chạy thử';
+  const phut = Math.max(1, Math.round((Date.now() - startedAt)/60000));
+  $('#tMin').textContent = phut + ' phút';
+  $('#debrief').textContent =
+    'Lúc nãy dòng chảy tắt vì thiếu mắt xích ở giữa. Khi đủ nhân, ti thể, ribosome, ' +
+    'lưới nội chất hạt, Golgi và túi tiết thì mARN đi được một mạch từ nhân ra tới màng. ' +
+    'Ti thể là chỗ dễ quên nhất — nó không nằm trên dòng chảy nhưng thiếu nó thì ribosome và Golgi đứng im.';
+  $('#done').classList.add('on');
+}
+function closeDone(){
+  $('#done').classList.remove('on');
+  $('#src').classList.remove('open');
+  reset();
+}
+
+function reset(){
+  clearInterval(tick); tick = null;
+  board = Array(SLOTS.length).fill(null);
+  picked = null; running = false; output = 0; startedAt = null;
+  $('#out').textContent = '0'; $('#fill').style.width = '0';
+  $('#btnRun').textContent = 'Chạy thử';
+  $('#logBody').innerHTML = '';
+  say('Dây chuyền làm protein đứng từ sáng. Tế bào này thiếu gì đó. Xem giúp tôi.');
+  say('Kéo bào quan từ khay vào các ô trong tế bào. Chạm vào bào quan đã đặt để lấy ra.', 'sys');
+  showInfo(null); drawTray(); drawCell();
+}
+
+/* ── điều hướng ── */
+function goPlay(){ $('#map').classList.remove('on'); $('#play').classList.add('on'); reset(); }
+function goMap(){ stop(); $('#play').classList.remove('on'); $('#map').classList.add('on'); }
+
+$('#btnRun').addEventListener('click', () => running ? stop() : run());
+$('#btnReset').addEventListener('click', reset);
+window.addEventListener('keydown', e => { if(e.key === 'Escape'){ picked = null; drawTray(); } });
+
+drawTray(); drawCell();
+</script>
+</body>
+</html>
