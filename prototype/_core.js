@@ -144,7 +144,11 @@ const SIM = (function(){
       for (const _ of exiting){
         s.out += 1;
         s.events.push({ type:'exit', out: s.out });
-        if (s.out >= WIN && !s.done){ s.done = true; s.events.push({ type:'win' }); }
+        if (s.out >= WIN && !s.done){
+          s.done = true;
+          s.running = false;               // hết ca: dừng cả dây chuyền, không đếm lố đơn
+          s.events.push({ type:'win' });
+        }
       }
     }
 
@@ -169,7 +173,7 @@ const SIM = (function(){
     return {
       t: +s.t.toFixed(4), running: s.running, done: s.done, out: s.out,
       pads: { ...s.pads }, powered: powered(s), nucleusAlive: s.nucleusAlive,
-      parcels: s.parcels.map(p => ({ id:p.id, kind:p.kind, seg:p.seg, pos:+p.pos.toFixed(4), phase:p.phase })),
+      parcels: s.parcels.map(p => ({ id:p.id, kind:p.kind, seg:p.seg, pos:+p.pos.toFixed(4), phase:p.phase, tt:+(p.tt||0).toFixed(4) })),
       queues, win: WIN
     };
   }

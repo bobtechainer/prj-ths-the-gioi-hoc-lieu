@@ -21,7 +21,7 @@ const UI = (function(){
   ];
   const PAD_XY = {
     P1: NODES[1], P2: NODES[2], P3: NODES[3], P4: NODES[4],
-    S1: { x: 560, y: 592 }, S2: { x: 262, y: 138 }
+    S1: { x: 560, y: 552 }, S2: { x: 262, y: 138 }
   };
   // cubic bezier từng đoạn, control uốn chữ S
   const SEGS = [];
@@ -86,6 +86,7 @@ const UI = (function(){
   let picked = null;
   let raf = null, lastTs = 0, playT0 = 0;
   let layerSt, layerParcel, layerFx, layerCable;
+  let lastPadsKey = '';           // chỉ dựng lại layer trạm khi pads đổi
   const saidOnce = new Set();
 
   /* ---------- dựng cảnh tĩnh ---------- */
@@ -138,7 +139,7 @@ const UI = (function(){
     E('ellipse', { cx:190, cy:435, rx:98, ry:16, fill:'rgba(58,46,36,.12)' }, nuc);
     E('path', { d:'M96 430q0-118 96-118t96 118Z', fill:'#c9b6f7', stroke:'#3a2e24', 'stroke-width':4.5 }, nuc);
     E('path', { d:'M120 430q0-95 72-95', fill:'none', stroke:'#fff', 'stroke-width':7, opacity:.5, 'stroke-linecap':'round' }, nuc);
-    E('rect', { x:236, y:236, width:22, height:52, rx:6, fill:'#8a6cf0', stroke:'#3a2e24', 'stroke-width':3.5, transform:'rotate(14 247 262)' }, nuc);
+    E('rect', { x:236, y:268, width:22, height:52, rx:6, fill:'#8a6cf0', stroke:'#3a2e24', 'stroke-width':3.5, transform:'rotate(14 247 294)' }, nuc);
     // cửa sổ ADN
     E('circle', { cx:176, cy:378, r:30, fill:'#f3edff', stroke:'#3a2e24', 'stroke-width':3.5 }, nuc);
     E('path', { d:'M162 366q14 8 0 16t0 16M190 366q-14 8 0 16t0 16', fill:'none', stroke:'#8a6cf0', 'stroke-width':3, 'stroke-linecap':'round' }, nuc);
@@ -185,7 +186,16 @@ const UI = (function(){
   function render(){
     const s = SIM.snapshot(sim);
 
-    // trạm
+    // trạm — CHỈ dựng lại khi bố trí pads / nguồn điện / trạng thái chạy đổi,
+    // nếu xoá-vẽ mỗi khung hình thì animation "bang" restart liên tục → trạm vô hình
+    const padsKey = JSON.stringify(s.pads) + '|' + s.powered + '|' + s.running;
+    if (padsKey !== lastPadsKey){ lastPadsKey = padsKey; drawStations(s); }
+
+    drawNucleusAndParcels(s);
+    drawTally(s);
+  }
+
+  function drawStations(s){
     layerSt.innerHTML = '';
     for (const pid of SIM.PADS){
       const org = s.pads[pid];
@@ -220,7 +230,9 @@ const UI = (function(){
       if (idleBelt) g.style.opacity = .55;
       g.addEventListener('click', () => removeStation(pid));
     }
+  }
 
+  function drawNucleusAndParcels(s){
     // nhân chết / sống
     const nuc = $('#nucleus');
     if (nuc){
@@ -240,7 +252,8 @@ const UI = (function(){
         rot = (qi % 2 ? -8 : 8);
       } else if (p.phase === 'transform'){
         pt = segPoint(p.seg, 1);
-        scale = 1 + 0.18 * Math.sin((1 - p.tt / SIM.TRANSFORM_T) * Math.PI);
+        const tt = Number.isFinite(p.tt) ? p.tt : 0;
+        scale = 1 + 0.18 * Math.sin((1 - tt / SIM.TRANSFORM_T) * Math.PI);
       } else {
         pt = segPoint(p.seg, p.pos);
       }
@@ -251,18 +264,20 @@ const UI = (function(){
       const ic = E('g', { transform:'translate(-12,-12)' }, g);
       ic.innerHTML = kindGlyph(p.kind, 24);
     }
-    // bong bóng "!" trên hàng ứ ≥3
+    // bong bóng "!" trên hàng ứ ≥3 (không dùng animation pop — layer này vẽ lại mỗi khung)
     for (const pad in queueCount){
       if (queueCount[pad] + 1 >= 3){
         const p = PAD_XY[pad];
-        const g = E('g', { class:'bang', transform:`translate(${p.x - 74},${p.y - 66})` }, layerParcel);
+        const wig = Math.sin(performance.now() / 160) * 4;
+        const g = E('g', { transform:`translate(${p.x - 74},${p.y - 66}) rotate(${wig})` }, layerParcel);
         E('circle', { cx:0, cy:0, r:15, fill:'#fff', stroke:'#e05648', 'stroke-width':3.5 }, g);
         const t = E('text', { x:0, y:6, 'text-anchor':'middle', 'font-size':'18', 'font-weight':'900', fill:'#e05648' }, g);
         t.textContent = '!';
       }
     }
+  }
 
-    // tally
+  function drawTally(s){
     $('#out').textContent = s.out + '/' + s.win;
     const crates = $('#crates');
     if (crates.childElementCount !== s.win){
@@ -305,9 +320,12 @@ const UI = (function(){
         case 'nucleus-heal': speak('May quá, nhân hồi lại rồi. Tiếp tục nào.'); break;
         case 'lucla': speak('Cái đó của nhà cây. Xưởng mình là tế bào động vật, nó đứng chơi thôi.', 'lucla'); break;
         case 'tithe-misplug': speak('Máy phát điện phải cắm vào Ô NGUỒN có dây ấy, để đây không ra điện đâu.', 'misplug'); break;
-        case 'atp': fxBolt(); break;
+        case 'atp':
+          fxBolt();
+          if (saidOnce.has('nopower')) speak('Có điện rồi đó! Nhìn tia chớp chạy theo dây kìa.', 'power-on');
+          break;
         case 'exit': fxConfetti(); break;
-        case 'win': setTimeout(showDone, 900); break;
+        case 'win': if (auto) setTimeout(showDone, 900); else showDone(); break;
       }
     }
     // nhắc thiếu điện (kiểm tra trạng thái, 1 lần)
@@ -457,7 +475,7 @@ const UI = (function(){
   }
   function resetShift(){
     sim = SIM.create();
-    saidOnce.clear(); picked = null; playT0 = performance.now();
+    saidOnce.clear(); picked = null; playT0 = performance.now(); lastPadsKey = '__init__';
     buildScene(); buildTray(); hideInfo(); syncRunBtn(); render();
     speak('Ca sáng đây! Đơn hàng: 8 kiện protein mà xưởng còn trống trơn. Kéo máy vào các trạm rồi bấm Mở ca nhé.');
   }
