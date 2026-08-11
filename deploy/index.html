@@ -1,0 +1,1896 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet"><title>Xưởng lắp tế bào — Nhà máy tí hon</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --paper:#f7efdf; --card:#fffdf6; --ink:#3a2e24; --muted:#8a7a66;
+    --line:#e3d5bd; --edge:#d9c6a6;
+    --blue:#3f8fe8; --green:#3fae6b; --orange:#f0862c; --red:#e05648;
+    --purple:#8a6cf0; --pink:#ea5fae; --gold:#f2b722; --teal:#2fa8b8;
+    --sh:0 2px 0 var(--edge), 0 10px 22px rgba(90,70,40,.14);
+  }
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--ink);overflow:hidden;touch-action:manipulation;
+    font:16px/1.5 "Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,.6), transparent 40%),
+      radial-gradient(rgba(160,130,90,.12) 1.6px, transparent 1.7px) 0 0/26px 26px,
+      var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  .screen{position:fixed;inset:0;display:none;flex-direction:column}
+  .screen.on{display:flex}
+  button{font:inherit;cursor:pointer}
+
+  /* ───── sticker / paper bits ───── */
+  .stick{
+    display:inline-block;background:var(--card);border:2.5px solid var(--ink);
+    border-radius:12px;box-shadow:var(--sh);padding:6px 14px;font-weight:800;
+  }
+  .btn{
+    background:var(--card);border:2.5px solid var(--ink);border-radius:12px;
+    box-shadow:0 3px 0 var(--ink);padding:8px 16px;font-weight:800;font-size:15px;
+    transition:transform .08s, box-shadow .08s;white-space:nowrap;color:var(--ink);
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+  .btn.go{background:var(--green);color:#fff}
+  .btn.warn{background:#ffe9c9}
+  .btn.ghost{border-color:transparent;box-shadow:none;background:transparent;color:var(--muted)}
+  .btn:disabled{opacity:.4;pointer-events:none}
+
+  /* ───── 0 · CHỌN CHỦ ĐỀ + GHÉP NGƯỜI CHƠI ───── */
+  /* ═══════════ MÀN CHỌN CHUYỆN — carousel hero ═══════════
+     Nền đổi màu theo thẻ đang chọn. Mầm đứng giữa, đổi trang phục theo môn.
+     Hai bên là hai câu kề, mờ và nhỏ. Đáy màn là dãy ảnh nhỏ để nhảy thẳng. */
+  #scr-topic{
+    position:fixed;inset:0;overflow:hidden;
+    background:var(--hero-bg,#3fae6b);
+    transition:background-color 650ms cubic-bezier(.4,0,.2,1);
+  }
+  @media (prefers-reduced-motion:reduce){
+    #scr-topic{transition:none}
+    #hero-stage .figure{transition:opacity 120ms linear!important}
+  }
+  /* hạt nhiễu cho nền đỡ phẳng */
+  #hero-grain{
+    position:absolute;inset:0;pointer-events:none;z-index:5;opacity:.42;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+    background-size:200px 200px;
+  }
+  /* chữ khổng lồ chìm phía sau */
+  #hero-ghost{
+    position:absolute;left:0;right:0;top:12%;z-index:2;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;user-select:none;-webkit-user-select:none;
+    font-family:'Baloo 2',var(--font,inherit);font-weight:800;
+    font-size:clamp(64px,17vw,240px);line-height:1;letter-spacing:-.03em;
+    text-transform:uppercase;color:#fff;opacity:.19;white-space:nowrap;
+    transition:opacity 650ms cubic-bezier(.4,0,.2,1);
+  }
+  /* nhãn góc trên */
+  #hero-brand{
+    position:absolute;top:20px;left:22px;z-index:60;
+    font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+    color:#fff;opacity:.92;
+  }
+  /* bộ lọc môn */
+  #hero-subs{
+    position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:60;
+    display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:92vw;
+  }
+  #hero-subs button{
+    font:inherit;font-weight:800;font-size:13.5px;padding:9px 16px;min-height:44px;
+    cursor:pointer;border-radius:99px;color:#fff;
+    background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.45);
+    transition:transform 160ms,background-color 160ms,border-color 160ms;
+  }
+  #hero-subs button:hover{transform:translateY(-2px);background:rgba(255,255,255,.28)}
+  #hero-subs button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  #hero-subs button[aria-pressed="true"]{background:#fff;color:#2a2118;border-color:#fff}
+
+  /* sân khấu nhân vật */
+  #hero-stage{position:absolute;inset:0;z-index:3}
+  /* lớp tối mềm dưới đáy: giữ chữ trắng đọc được dù nhân vật đi qua phía sau */
+  #hero-scrim{position:absolute;left:0;right:0;bottom:0;height:44%;z-index:12;pointer-events:none;
+    background:linear-gradient(transparent,rgba(24,18,10,.5))}
+  #hero-stage .figure{
+    position:absolute;bottom:104px;width:min(17vw,178px);aspect-ratio:.62/1;
+    will-change:transform,filter,opacity,left;
+    transition:transform 650ms cubic-bezier(.4,0,.2,1),filter 650ms cubic-bezier(.4,0,.2,1),
+               opacity 650ms cubic-bezier(.4,0,.2,1),left 650ms cubic-bezier(.4,0,.2,1);
+  }
+  #hero-stage .figure svg{width:100%;height:100%;display:block;
+    filter:drop-shadow(0 18px 26px rgba(30,20,10,.28))}
+  #hero-stage .figure.center{left:50%;transform:translateX(-50%) scale(1.34);filter:none;opacity:1;z-index:20}
+  #hero-stage .figure.side  {transform:translateX(-50%) scale(.72);filter:blur(2.5px);opacity:.62;z-index:10}
+  #hero-stage .figure.left  {left:33%}
+  #hero-stage .figure.right {left:67%}
+  #hero-stage .figure.back  {left:50%;transform:translateX(-50%) scale(.52);filter:blur(5px);opacity:.42;z-index:5}
+
+  /* khối chữ + nút mũi tên góc dưới trái */
+  #hero-info{position:absolute;left:24px;bottom:120px;z-index:60;max-width:min(330px,42vw);color:#fff;text-shadow:0 2px 12px rgba(20,14,8,.45)}
+  #hero-info .mon{
+    display:inline-block;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.45);
+    border-radius:99px;padding:4px 12px;margin-bottom:10px;
+  }
+  #hero-info h2{
+    margin:0 0 8px;font-family:'Baloo 2',var(--font,inherit);
+    font-size:clamp(24px,3.4vw,40px);line-height:1.14;font-weight:800;letter-spacing:-.01em;
+  }
+  #hero-info .lop{margin:0 0 6px;font-size:14px;font-weight:700;opacity:.9}
+  #hero-info .lock{margin:0;font-size:13.5px;font-weight:700;opacity:.9}
+  #hero-arrows{display:flex;gap:12px;margin-top:16px}
+  #hero-arrows button{
+    width:56px;height:56px;border-radius:50%;cursor:pointer;
+    display:grid;place-items:center;color:#fff;
+    background:transparent;border:2px solid rgba(255,255,255,.85);
+    transition:transform 150ms,background-color 150ms;
+  }
+  #hero-arrows button:hover{transform:scale(1.08);background:rgba(255,255,255,.14)}
+  #hero-arrows button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+  /* nút vào bài góc dưới phải */
+  #hero-go{
+    position:absolute;right:24px;bottom:126px;z-index:60;text-shadow:0 2px 12px rgba(20,14,8,.45);
+    display:flex;align-items:center;gap:10px;cursor:pointer;
+    font-family:'Baloo 2',var(--font,inherit);font-weight:800;
+    font-size:clamp(19px,2.6vw,34px);letter-spacing:-.01em;line-height:1;
+    color:#fff;background:transparent;border:0;padding:10px 4px;min-height:56px;
+    transition:transform 180ms,opacity 180ms;
+  }
+  #hero-go:hover{transform:translateX(4px)}
+  #hero-go:focus-visible{outline:3px solid #fff;outline-offset:4px;border-radius:8px}
+  #hero-go[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+
+  /* dãy ảnh nhỏ dưới đáy */
+  #hero-strip{
+    position:absolute;left:0;right:0;bottom:0;z-index:60;
+    display:flex;gap:8px;align-items:flex-end;
+    padding:8px 18px 12px;overflow-x:auto;
+    background:linear-gradient(transparent,rgba(30,20,10,.22));
+    scrollbar-width:none;
+  }
+  #hero-strip::-webkit-scrollbar{display:none}
+  #hero-strip button{
+    flex:none;width:64px;min-height:74px;cursor:pointer;padding:6px 4px 5px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    border-radius:14px;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.3);
+    transition:transform 160ms,background-color 160ms,border-color 160ms;
+  }
+  #hero-strip button:hover{transform:translateY(-4px);background:rgba(255,255,255,.26)}
+  #hero-strip button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  #hero-strip button[aria-current="true"]{background:#fff;border-color:#fff;transform:translateY(-6px)}
+  #hero-strip button[aria-current="true"] small{color:#2a2118}
+  #hero-strip button svg{width:30px;height:34px;display:block}
+  #hero-strip button small{font-size:9.5px;font-weight:800;line-height:1.15;text-align:center;
+    max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #hero-strip .padlock{position:absolute;margin-top:-4px;font-size:11px}
+
+  @media (max-width:760px){
+    #hero-ghost{top:9%;font-size:clamp(52px,19vw,150px)}
+    #hero-stage .figure{width:min(34vw,165px);bottom:96px}
+    /* màn nhỏ: chỉ giữ Mầm giữa — dãy ảnh dưới đáy đã lo việc chuyển câu */
+    #hero-stage .figure.side,#hero-stage .figure.back{display:none}
+    #hero-stage .figure.center{transform:translateX(-50%) scale(1.12)}
+    #hero-stage .figure.side{transform:translateX(-50%) scale(.5)}
+    #hero-stage .figure.left{left:20%} #hero-stage .figure.right{left:80%}
+    #hero-stage .figure.back{transform:translateX(-50%) scale(.38)}
+    #hero-info{bottom:222px;max-width:88vw}
+    #hero-go{bottom:98px;right:16px}
+    #hero-subs{top:50px;left:0;right:0;transform:none;justify-content:flex-start;
+      flex-wrap:nowrap;overflow-x:auto;max-width:100vw;padding:0 14px;scrollbar-width:none}
+    #hero-subs::-webkit-scrollbar{display:none}
+    #hero-subs button{flex:none}
+    #hero-ghost{top:16%}
+    #hero-arrows{margin-top:12px}
+    #hero-arrows button{width:50px;height:50px}
+    #hero-brand{top:18px}
+  }
+  /* ───── 1 · KHU VƯỜN ───── */
+  #scr-map .wrap{flex:1;display:grid;place-items:center;padding:14px;min-height:0}
+  #scr-map svg{width:min(96vw,980px);max-height:92vh;border-radius:22px;border:4px solid var(--ink);
+    box-shadow:var(--sh);background:#bcdf9a}
+  .plot{cursor:pointer}
+  .plot:hover .ring,.plot:focus-visible .ring{opacity:1}
+  .maplbl{font-weight:800;font-size:21px;fill:var(--ink)}
+  .mapsub{font-weight:600;font-size:13.5px;fill:var(--muted)}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .bobber{animation:bob 2.1s ease-in-out infinite}
+
+  /* ───── 2 · MÀN CHƠI ───── */
+  #scr-play{gap:8px;padding:10px 12px 12px}
+  .topbar{display:flex;align-items:center;gap:10px;flex:none;flex-wrap:wrap}
+  .topbar h1{margin:0;font-size:18px}
+  .sp{flex:1}
+  .tally{display:flex;align-items:center;gap:8px;background:var(--card);
+    border:2.5px solid var(--ink);border-radius:12px;box-shadow:var(--sh);padding:5px 12px}
+  .tally b{font-size:19px;font-variant-numeric:tabular-nums}
+  .tally .crates{display:flex;gap:2px}
+  .tally .crates i{width:11px;height:11px;border-radius:3px;background:#eadfc8;border:1.5px solid var(--edge)}
+  .tally .crates i.f{background:var(--pink);border-color:#c14b8e}
+
+  .stagebox{flex:1;min-height:0;display:flex;gap:10px;position:relative}
+  .stagewrap{flex:1;min-width:0;display:grid;place-items:center;position:relative}
+  #stage{width:100%;height:100%;max-width:1500px}
+
+  /* ── Bảng lý thuyết: hiện NGAY TRÊN MÀN khi đủ đơn, không phải popup.
+       Dây chuyền vẫn chạy bên cạnh để vừa đọc vừa nhìn. ── */
+  #theory{
+    display:none;flex:none;width:378px;overflow-y:auto;
+    background:var(--card);border:3px solid var(--ink);border-radius:16px;
+    box-shadow:var(--sh);padding:14px 16px 16px;
+  }
+  #scr-play.done-mode #theory{display:block;animation:slidein .35s ease}
+  #scr-play.done-mode .shelf{display:none}
+  @keyframes slidein{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+  #theory .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  #theory .hd h3{margin:0;font-size:18px;padding:0;border:0;text-transform:none;letter-spacing:0;color:var(--ink)}
+  #theory .stamp{background:var(--green);color:#fff;border:2.5px solid var(--ink);border-radius:9px;
+    padding:2px 9px;font-size:12.5px;font-weight:800}
+  #theory h4{margin:14px 0 6px;font-size:13px;font-weight:800;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--muted)}
+  #theory p{margin:0 0 8px;font-size:14.5px;line-height:1.6}
+  #theory .who2{display:flex;gap:9px;align-items:flex-start;background:#fff8ec;
+    border:2.5px solid var(--ink);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+  #theory .who2.mamrow{background:#eef6ff;border-color:#2f6fbf}
+  #theory .who2 svg{flex:none}
+  #theory .who2 p{margin:0;font-size:14px}
+  #theory .who2 b{display:block;font-size:11.5px;letter-spacing:.04em;color:#a2792a;margin-bottom:1px}
+  #theory .who2.mamrow b{color:#2f6fbf}
+  /* chuỗi dây chuyền: tên nghề + tên sách, hai lớp */
+  #theory .chain{display:flex;flex-direction:column;gap:5px;margin:0 0 10px}
+  #theory .chain div{display:flex;align-items:baseline;gap:7px;font-size:13.5px;
+    padding:6px 9px;border-radius:9px;background:#f6f1e4}
+  #theory .chain span.n{font-weight:800;color:#7a6a52;min-width:15px}
+  #theory .chain span.j{font-weight:700}
+  #theory .chain span.s{font-style:italic;color:var(--muted);font-size:12.5px}
+  #theory .quote{border:2.5px solid var(--ink);border-radius:12px;padding:11px 13px;background:#fdfaf1}
+  #theory .quote p{font-size:14px}
+  #theory .quote mark{background:#ffe9a8;padding:0 3px;border-radius:4px;font-weight:700}
+  #theory .cite{font-size:12px;color:var(--muted);font-weight:600;margin:0}
+  #theory .grow{display:flex;align-items:center;gap:10px;background:#eef9f1;border:2.5px solid var(--green);
+    border-radius:12px;padding:10px 12px;margin:12px 0 0;font-size:13.5px;font-weight:600}
+  #theory .acts2{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  #theory .acts2 .btn{flex:1;min-width:120px;text-align:center}
+
+  /* bác trưởng xưởng (trái) — người biết nghề, giao việc */
+  .foreman{
+    position:absolute;left:14px;bottom:8px;display:flex;gap:9px;align-items:flex-end;
+    max-width:min(400px,54vw);z-index:5;pointer-events:none;
+  }
+  .foreman .face{flex:none;filter:drop-shadow(0 3px 0 rgba(90,70,40,.25))}
+  /* Mầm (phải) — bạn học việc, chỉ được hỏi chứ không được khẳng định */
+  .mam{
+    position:absolute;right:14px;bottom:8px;display:flex;gap:8px;align-items:flex-end;
+    flex-direction:row-reverse;max-width:min(360px,50vw);z-index:5;pointer-events:none;
+  }
+  .mam .face{flex:none;filter:drop-shadow(0 3px 0 rgba(90,70,40,.25))}
+  .mam .bubble{border-bottom-left-radius:14px;border-bottom-right-radius:4px;background:#eef6ff;border-color:#2f6fbf}
+  .mam .bubble .who{display:block;font-size:11.5px;font-weight:800;color:#2f6fbf;letter-spacing:.04em}
+  .bubble{
+    background:var(--card);border:2.5px solid var(--ink);border-radius:14px;
+    border-bottom-left-radius:4px;box-shadow:var(--sh);padding:9px 13px;
+    font-size:15px;font-weight:600;line-height:1.45;
+  }
+  .bubble .who{display:block;font-size:11.5px;font-weight:800;color:#a2792a;letter-spacing:.04em}
+  .bubble.pop{animation:bpop .25s ease}
+  .bubble.quiet{opacity:0;transition:opacity .3s}
+  @keyframes bpop{0%{transform:scale(.9)}70%{transform:scale(1.04)}100%{transform:scale(1)}}
+
+  /* shelf */
+  .shelf{flex:none;position:relative}
+  .shelf .board{
+    display:flex;gap:9px;align-items:stretch;overflow-x:auto;padding:10px 12px 12px;
+    background:linear-gradient(#efe2c8,#e7d6b4);border:2.5px solid var(--ink);
+    border-radius:16px;box-shadow:var(--sh);
+  }
+  .chip{
+    flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;
+    width:104px;padding:8px 6px 7px;background:var(--card);border:2.5px solid var(--ink);
+    border-radius:14px;box-shadow:0 3px 0 var(--edge);cursor:grab;user-select:none;
+    -webkit-user-select:none;touch-action:none;transition:transform .12s;
+  }
+  .chip:hover{transform:translateY(-3px)}
+  .chip.sel{outline:3px solid var(--blue);outline-offset:2px}
+  .chip.used{opacity:.28;pointer-events:none}
+  .chip b{font-size:12.5px;line-height:1.15;text-align:center;font-weight:800}
+  .chip small{font-size:10.5px;color:var(--muted);line-height:1.1;text-align:center}
+
+  /* info card */
+  .infocard{
+    position:absolute;left:58%;bottom:calc(100% + 10px);transform:translateX(-50%);
+    width:min(430px,92vw);background:var(--card);border:2.5px solid var(--ink);
+    border-radius:14px;box-shadow:var(--sh);padding:11px 14px;z-index:8;display:none;
+  }
+  .infocard.on{display:block;animation:bpop .2s ease}
+  .infocard .nm{font-weight:800;font-size:16px}
+  .infocard .what{font-size:14px;margin-top:1px}
+  .infocard .io{display:flex;gap:14px;margin-top:6px;font-size:13px}
+  .infocard .io span{color:var(--muted)}
+  .infocard .io b{font-weight:700}
+  .infocard .warnrow{margin-top:6px;font-size:13px;color:#b4552a;font-weight:600}
+  .infocard .x{position:absolute;top:6px;right:8px;border:0;background:none;font-size:16px;color:var(--muted)}
+
+  /* svg text */
+  text{font-family:"Segoe UI",system-ui,Arial,sans-serif;user-select:none;-webkit-user-select:none}
+  /* viền trắng quanh chữ để đọc được cả khi băng chuyền chạy qua phía dưới */
+  .padnum,.padhint,.stlbl,.biglbl{paint-order:stroke;stroke:#fdf8ec;stroke-width:4.5px;stroke-linejoin:round}
+  .padnum{font-size:16px;font-weight:800;fill:#a08c66}
+  .padhint{font-size:15px;font-weight:700;fill:#a08c66}
+  .stlbl{font-size:13px;font-weight:800;fill:var(--ink)}
+  .biglbl{font-size:15px;font-weight:800;fill:var(--ink);letter-spacing:.03em}
+  .pad-hit{cursor:pointer}
+  .pad-ring{transition:all .15s}
+  .pad-hit.hot .pad-ring{stroke:var(--blue);stroke-width:4;fill:rgba(63,143,232,.10)}
+  .stgroup{cursor:pointer}
+  @keyframes bangpop{0%{transform:scale(.2)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .bang{transform-box:fill-box;transform-origin:center;animation:bangpop .25s ease}
+
+  #ghost{position:fixed;pointer-events:none;z-index:90;transform:translate(-50%,-56%);display:none;
+    filter:drop-shadow(0 8px 12px rgba(90,70,40,.35))}
+
+  /* ───── 3 · CHỐT CHẶNG ───── */
+  body.dragging #infocard{display:none!important}  /* thẻ thông tin không được che pad lúc kéo */
+  @media (max-width:760px){
+    .topbar h1{font-size:15px}
+    .bubble{font-size:13.5px}
+    .foreman,.mam{max-width:80vw}
+    /* Màn hẹp: chỉ hiện bóng thoại của người vừa nói, tránh hai bóng đè nhau */
+    body.spk-mam .foreman .bubble{display:none}
+    body.spk-bac .mam .bubble{display:none}
+    .shelf .board{flex-wrap:wrap;justify-content:center;overflow-x:hidden} /* mọi chip đều với tới, không cần cuộn ngang */
+    .chip{width:84px}
+    /* Bảng lý thuyết xuống dưới; dây chuyền vẫn ở trên để vừa đọc vừa nhìn */
+    .stagebox{flex-direction:column}
+    #theory{width:auto;max-height:50vh}
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ 1 · BẢN ĐỒ ════════ -->
+<!-- ════════ 0 · CHỌN CHỦ ĐỀ ════════ -->
+<section id="scr-topic" class="screen on">
+  <div id="hero-grain"></div>
+  <div id="hero-ghost" aria-hidden="true"></div>
+  <div id="hero-brand">Thế giới học liệu</div>
+  <div id="hero-subs" role="group" aria-label="Chọn môn"></div>
+  <div id="hero-stage" aria-hidden="true"></div>
+  <div id="hero-scrim"></div>
+
+  <div id="hero-info">
+    <span class="mon" id="hero-mon"></span>
+    <h2 id="hero-hoi"></h2>
+    <p class="lop" id="hero-lop"></p>
+    <p class="lock" id="hero-lock"></p>
+    <div id="hero-arrows">
+      <button type="button" id="hero-prev" aria-label="Câu trước">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      </button>
+      <button type="button" id="hero-next" aria-label="Câu sau">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <button type="button" id="hero-go">
+    <span id="hero-go-txt">Đi thôi</span>
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </button>
+
+  <div id="hero-strip" role="tablist" aria-label="Tất cả câu hỏi"></div>
+</section>
+
+
+<!-- ════════ 1 · KHU VƯỜN ════════ -->
+<section id="scr-map" class="screen">
+  <div class="gnav">
+    <button class="btn" onclick="UI.goTopic()">← Chọn chuyện khác</button>
+    <div class="sp"></div>
+    <button class="btn go" onclick="UI.gardenGo('lab')">Vào Xưởng lắp tế bào →</button>
+  </div>
+  <div class="wrap">
+    <svg id="garden" viewBox="0 0 880 560" aria-label="Khu vườn của Mầm">
+      <!-- cỏ -->
+      <rect x="0" y="0" width="880" height="560" fill="#bcdf9a"/>
+      <g fill="#a9d284">
+        <ellipse cx="130" cy="90" rx="90" ry="34"/><ellipse cx="700" cy="70" rx="120" ry="40"/>
+        <ellipse cx="180" cy="470" rx="130" ry="44"/><ellipse cx="760" cy="440" rx="100" ry="38"/>
+        <ellipse cx="440" cy="120" rx="70" ry="26"/>
+      </g>
+      <g fill="#95c470">
+        <path d="M60 200q8-18 16 0 8 18-16 0Z"/><path d="M820 260q8-18 16 0 8 18-16 0Z"/>
+        <path d="M120 350q8-18 16 0 8 18-16 0Z"/><path d="M700 520q8-18 16 0 8 18-16 0Z"/>
+      </g>
+      <!-- hàng rào -->
+      <g stroke="#a4703d" stroke-width="5" stroke-linecap="round" opacity=".85">
+        <path d="M30 40h820M30 40v18M120 40v18M210 40v18M300 40v18M390 40v18M480 40v18M570 40v18M660 40v18M750 40v18M840 40v18"/>
+      </g>
+      <!-- lối đất từ nhà Mầm toả ra ba nhà bài học -->
+      <path d="M440 300 320 350M440 300 620 340M440 300 452 450" fill="none" stroke="#e8d9ad" stroke-width="20" stroke-linecap="round"/>
+      <path d="M440 300 320 350M440 300 620 340M440 300 452 450" fill="none" stroke="#d9c48b" stroke-width="3" stroke-dasharray="8 10"/>
+
+      <!-- NHÀ CỦA MẦM (giữa vườn) -->
+      <g>
+        <ellipse cx="440" cy="288" rx="62" ry="13" fill="rgba(58,46,36,.14)"/>
+        <path d="M394 288v-42q46-40 92 0v42Z" fill="#fffdf6" stroke="#3a2e24" stroke-width="4"/>
+        <path d="M384 252q56-46 112 0l-8 12q-48-38-96 0Z" fill="#7ec96a" stroke="#3a2e24" stroke-width="4"/>
+        <rect x="424" y="258" width="32" height="30" rx="8" fill="#f0862c" stroke="#3a2e24" stroke-width="3.5"/>
+        <circle cx="440" cy="240" r="7" fill="#fffdf6" stroke="#3a2e24" stroke-width="3"/>
+        <rect x="392" y="292" width="96" height="24" rx="8" fill="#fffdf6" stroke="#3a2e24" stroke-width="3"/>
+        <text x="440" y="309" text-anchor="middle" font-size="12.5" font-weight="800" fill="#3a2e24">Nhà của Mầm</text>
+      </g>
+
+      <!-- cây của Mầm cạnh nhà -->
+      <g id="mapTree"></g>
+      <g id="mapMam" display="none"></g>
+
+      <!-- BÀI HỌC MỞ: Xưởng lắp tế bào -->
+      <g class="plot" tabindex="0" role="button" aria-label="Vào bài Xưởng lắp tế bào" onclick="UI.gardenGo('lab')"
+         onkeydown="if(event.key==='Enter'){event.preventDefault();UI.gardenGo('lab')}">
+        <ellipse class="ring" cx="255" cy="380" rx="98" ry="56" fill="rgba(255,255,255,.55)" opacity="0" style="transition:opacity .2s"/>
+        <ellipse cx="255" cy="412" rx="74" ry="15" fill="rgba(58,46,36,.15)"/>
+        <rect x="200" y="330" width="110" height="80" rx="10" fill="#fffdf6" stroke="#3a2e24" stroke-width="4"/>
+        <path d="M190 340q65-44 130 0v13H190Z" fill="#8a6cf0" stroke="#3a2e24" stroke-width="4"/>
+        <rect x="214" y="356" width="24" height="22" rx="5" fill="#cfe7ee" stroke="#3a2e24" stroke-width="3"/>
+        <rect x="272" y="356" width="24" height="22" rx="5" fill="#cfe7ee" stroke="#3a2e24" stroke-width="3"/>
+        <rect x="242" y="372" width="26" height="38" rx="5" fill="#f0862c" stroke="#3a2e24" stroke-width="3"/>
+        <g class="bobber">
+          <circle cx="255" cy="296" r="15" fill="#3fae6b" stroke="#3a2e24" stroke-width="3.5"/>
+          <path d="M248 296l5 5 10-11" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <text class="maplbl" x="255" y="438" text-anchor="middle" font-size="17">Xưởng lắp tế bào</text>
+        <text class="mapsub" x="255" y="456" text-anchor="middle">đi tới cửa là vào</text>
+      </g>
+
+      <!-- 2 nhà khoá -->
+      <g opacity=".55">
+        <ellipse cx="672" cy="392" rx="60" ry="13" fill="rgba(58,46,36,.14)"/>
+        <rect x="627" y="326" width="90" height="64" rx="9" fill="#efe7d4" stroke="#3a2e24" stroke-width="3.5"/>
+        <path d="M620 334q52-34 104 0v12H620Z" fill="#c9bda3" stroke="#3a2e24" stroke-width="3.5"/>
+        <text class="maplbl" x="672" y="426" text-anchor="middle" font-size="16">Vườn quang hợp</text>
+        <text class="mapsub" x="672" y="444" text-anchor="middle">Chưa mở</text>
+      </g>
+      <g opacity=".55">
+        <ellipse cx="452" cy="516" rx="52" ry="12" fill="rgba(58,46,36,.14)"/>
+        <rect x="412" y="462" width="80" height="54" rx="9" fill="#efe7d4" stroke="#3a2e24" stroke-width="3.5"/>
+        <path d="M406 470q46-30 92 0v11h-92Z" fill="#c9bda3" stroke="#3a2e24" stroke-width="3.5"/>
+        <text class="maplbl" x="452" y="548" text-anchor="middle" font-size="16">Phòng tiêu bản</text>
+      </g>
+
+      <!-- Mầm đi bộ -->
+      <g id="gardenHero"></g>
+
+      <text x="440" y="28" text-anchor="middle" class="maplbl" font-size="24">Khu vườn của Mầm</text>
+      <text x="440" y="86" text-anchor="middle" class="mapsub" font-size="14" paint-order="stroke" stroke="#eef7e4" stroke-width="4" stroke-linejoin="round">Chạm vào đất là Mầm đi tới đó · đi tới cửa nhà có dấu tích xanh là vào bài</text>
+    </svg>
+  </div>
+</section>
+
+
+<!-- ════════ 2 · MÀN CHƠI ════════ -->
+<section id="scr-play" class="screen">
+  <div class="topbar">
+    <button class="btn ghost" onclick="UI.goGarden()">← Khu vườn</button>
+    <h1 class="stick" style="transform:rotate(-1deg)">🏭 Xưởng lắp tế bào</h1>
+    <div class="sp"></div>
+    <div class="tally" title="Số kiện đã chở ra khỏi cửa">
+      <span style="font-weight:700;font-size:13px;color:var(--muted)">ĐÃ GIAO</span>
+      <div class="crates" id="crates"></div>
+      <b id="out">0/8</b>
+    </div>
+    <button class="btn go" id="btnRun">▶ Cho băng chuyền chạy</button>
+    <button class="btn warn" id="btnReset">Dẹp hết, làm lại</button>
+  </div>
+
+  <div class="stagebox">
+   <div class="stagewrap">
+    <div class="foreman">
+      <svg class="face" width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="30" r="17" fill="#ffd9b0" stroke="#3a2e24" stroke-width="3"/>
+        <path d="M8 24q1-14 18-14t18 14l-3 3H11Z" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+        <rect x="21" y="6" width="10" height="8" rx="3" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+        <circle cx="20" cy="30" r="2.4" fill="#3a2e24"/><circle cx="32" cy="30" r="2.4" fill="#3a2e24"/>
+        <path d="M14 40q4 5 11 5" stroke="#3a2e24" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="bubble" id="bubble"><span class="who">BÁC TRƯỞNG XƯỞNG</span><span id="bubbleTxt">…</span></div>
+    </div>
+
+    <div class="mam">
+      <svg class="face" id="mamFace" width="46" height="52" viewBox="0 0 46 52" aria-label="Mầm"></svg>
+      <div class="bubble quiet" id="mamBubble"><span class="who">MẦM</span><span id="mamTxt"></span></div>
+    </div>
+
+    <svg id="stage" viewBox="0 0 1280 660" preserveAspectRatio="xMidYMid meet" aria-label="Sàn nhà máy tế bào"></svg>
+   </div>
+
+   <!-- Lý thuyết hiện tại chỗ này khi đủ đơn. Băng chuyền bên trái vẫn chạy. -->
+   <aside id="theory">
+     <div class="hd">
+       <span class="stamp">✓ Đủ 8 kiện</span>
+       <h3>Vừa rồi là chuyện gì</h3>
+     </div>
+     <p style="color:var(--muted);font-size:13.5px;margin-bottom:12px">
+       Băng chuyền bên cạnh vẫn đang chạy — bạn vừa đọc vừa nhìn nó làm nhé.
+       Cả ca làm mất <b id="thTime">—</b>.
+     </p>
+
+     <div class="who2">
+       <svg width="34" height="34" viewBox="0 0 52 52">
+         <circle cx="26" cy="30" r="17" fill="#ffd9b0" stroke="#3a2e24" stroke-width="3"/>
+         <path d="M8 24q1-14 18-14t18 14l-3 3H11Z" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+         <circle cx="20" cy="30" r="2.4" fill="#3a2e24"/><circle cx="32" cy="30" r="2.4" fill="#3a2e24"/>
+         <path d="M15 38q6 7 16 3" stroke="#3a2e24" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+       </svg>
+       <p><b>BÁC TRƯỞNG XƯỞNG</b>Lúc hàng dồn cục là dây chuyền đang chỉ cho mình chỗ nó thiếu.
+       Cứ nhìn hàng đứng lại ở đâu là biết chỗ đó chưa xong.</p>
+     </div>
+
+     <h4>Đường đi của một kiện hàng</h4>
+     <div class="chain">
+       <div><span class="n">1</span><span class="j">Phòng bản thiết kế</span><span class="s">nhân tế bào</span></div>
+       <div><span class="n">2</span><span class="j">Máy đọc bản thiết kế</span><span class="s">ribosome</span></div>
+       <div><span class="n">3</span><span class="j">Xưởng gấp hàng</span><span class="s">lưới nội chất hạt</span></div>
+       <div><span class="n">4</span><span class="j">Xưởng đóng gói</span><span class="s">bộ máy Golgi</span></div>
+       <div><span class="n">5</span><span class="j">Xe chở hàng</span><span class="s">túi tiết</span></div>
+       <div style="background:#fff0f6"><span class="n">6</span><span class="j">Ra khỏi tế bào</span><span class="s">tiết ra ngoài</span></div>
+     </div>
+     <p style="font-size:14px">Riêng <b>máy phát điện</b> (<i>ti thể</i>) không đứng trên băng chuyền.
+     Nhưng thiếu nó thì máy đọc bản thiết kế và xưởng đóng gói đều đứng im, vì hai máy đó cần điện mới chạy.</p>
+
+     <h4>Trong sách viết thế nào</h4>
+     <div class="quote">
+       <p>… Trong tế bào, <mark>ribosome</mark> là nơi tổng hợp protein. Ribosome đọc thông tin trên
+       <mark>mARN</mark> do nhân tạo ra, rồi lắp các axit amin thành chuỗi polypeptide. Chuỗi này được
+       đưa sang <mark>lưới nội chất hạt</mark> để gấp lại đúng hình dạng, rồi chuyển tới
+       <mark>bộ máy Golgi</mark> để đóng gói trước khi <mark>túi tiết</mark> đưa ra ngoài. Quá trình này
+       tiêu tốn năng lượng ATP do <mark>ti thể</mark> cung cấp …</p>
+       <p class="cite">Sinh học 10 — Bài 8: Tế bào nhân thực, trang 47, đoạn 3</p>
+     </div>
+
+     <div class="who2 mamrow" style="margin-top:12px">
+       <svg width="34" height="38" viewBox="0 0 46 52" id="mamFaceTheory"></svg>
+       <p><b>MẦM</b>À, hoá ra cái máy không đứng trên băng chuyền mới là cái làm cả hai máy kia đứng im.
+       Mình nhớ rồi nha.</p>
+     </div>
+
+     <div class="grow">
+       <svg width="30" height="34" viewBox="0 0 46 52" id="mamGrowIcon"></svg>
+       <span>Mầm ra thêm một lá — giờ đang ở mức <b id="thStage">ba lá</b>.</span>
+     </div>
+
+     <div class="acts2">
+       <button class="btn" onclick="UI.replay()">Làm lại từ đầu</button>
+       <button class="btn go" onclick="UI.doneToMap()">Về khu vườn →</button>
+     </div>
+   </aside>
+  </div>
+
+  <div class="shelf">
+    <div class="infocard" id="infocard">
+      <button class="x" onclick="UI.hideInfo()">✕</button>
+      <div class="nm" id="ic-nm"></div>
+      <div class="what" id="ic-what"></div>
+      <div class="io"><span>Cần có: <b id="ic-in"></b></span><span>Làm ra: <b id="ic-out"></b></span></div>
+      <div class="warnrow" id="ic-warn" style="display:none"></div>
+    </div>
+    <div class="board" id="board"></div>
+  </div>
+</section>
+
+<svg id="ghost" width="86" height="86" viewBox="0 0 86 86"></svg>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LÕI MÔ PHỎNG — THUẦN, KHÔNG DOM.
+     Bốc nguyên block này chạy trong Node được (module.exports ở cuối).
+     Bước cố định 1/120s. Không Math.random. Không Date.
+     ═══════════════════════════════════════════════════════════════ -->
+<script id="sim-core">
+'use strict';
+const SIM = (function(){
+  const SUB = 1/120;              // bước con cố định
+  const SPAWN_PERIOD = 1.6;       // nhân sinh kiện mỗi 1,6s
+  const SEG_DUR = 1.7;            // thời gian đi hết một đoạn băng
+  const TRANSFORM_T = 0.6;        // thời gian trạm biến đổi một kiện
+  const ATP_PERIOD = 0.9;         // nhịp tia chớp (chỉ để vẽ)
+  const LYSO_KILL = 1.5;          // lysosome sát nhân → nhân chết sau 1,5s
+  const LYSO_HEAL = 1.0;          // gỡ ra → nhân hồi sau 1s
+  const MAX_LIVE = 9;             // trần kiện đang sống (ứ tới tận nguồn)
+  const WIN = 8;                  // đơn hàng: 8 kiện xuất xưởng
+
+  const PADS = ['P1','P2','P3','P4','S1','S2'];
+  const BELT = ['P1','P2','P3','P4'];        // node 1..4; node 0 = NHÂN, node 5 = CỬA
+  const POWER_PAD = 'S1';
+  const NEAR_NUCLEUS = 'S2';
+
+  // HAI LỚP TÊN: `ten` là tên nghề trong xưởng (chữ to, hiểu ngay phải làm gì),
+  // `sach` là tên trong sách Sinh học (chữ nhỏ, để vẫn nhớ được từ đúng).
+  const KINDS = {
+    marn: 'bản thiết kế',  tho: 'hàng thô',
+    gap : 'hàng đã gấp',   goi: 'kiện đã đóng'
+  };
+  const KINDS_SACH = {
+    marn: 'mARN',              tho: 'chuỗi protein thô',
+    gap : 'protein đã gấp',    goi: 'protein đã đóng gói'
+  };
+
+  const ORGS = {
+    ribo : { ten:'Máy đọc bản thiết kế', sach:'Ribosome',
+             lam:'Đọc bản thiết kế từ nhân, làm ra hàng thô.',
+             vao:'marn', ra:'tho', atp:true  },
+    lnc  : { ten:'Xưởng gấp hàng',       sach:'Lưới nội chất hạt',
+             lam:'Gấp hàng thô lại cho đúng hình.',
+             vao:'tho',  ra:'gap', atp:false },
+    golgi: { ten:'Xưởng đóng gói',       sach:'Bộ máy Golgi',
+             lam:'Đóng hàng đã gấp thành kiện.',
+             vao:'gap',  ra:'goi', atp:true  },
+    tuiti: { ten:'Xe chở hàng',          sach:'Túi tiết',
+             lam:'Chở kiện ra cửa xuất hàng.',
+             vao:'goi',  ra:'goi', atp:false },
+    tithe: { ten:'Máy phát điện',        sach:'Ti thể',
+             lam:'Làm ra điện cho những máy cần điện.',
+             vao:null,   ra:null,  atp:false, power:true,
+             hint:'Máy này phải cắm vào ổ điện, để chỗ khác thì không ra điện.' },
+    lyso : { ten:'Thùng enzyme',         sach:'Lysosome',
+             lam:'Đựng nước tiêu hoá, dùng để dọn rác trong tế bào.',
+             vao:null,   ra:null,  atp:false,
+             hint:'Đặt sát vách nhân thì nước trong thùng ăn mất cái nhân.' },
+    lucla: { ten:'Máy hứng nắng',        sach:'Lục lạp',
+             lam:'Hứng nắng làm ra đường. Chỉ nhà cây mới có máy này.',
+             vao:null,   ra:null,  atp:false,
+             hint:'Xưởng mình là tế bào động vật nên máy này để đó cũng không chạy.' }
+  };
+
+  function create(){
+    return {
+      t: 0, runT: 0, running: false, done: false,
+      pads: { P1:null, P2:null, P3:null, P4:null, S1:null, S2:null },
+      parcels: [],                // {id, kind, seg, pos, phase:'move'|'queue'|'transform', tt}
+      nextId: 1,
+      spawnTimer: 0, atpTimer: 0,
+      out: 0,
+      nucleusAlive: true, lysoTimer: 0, healTimer: 0,
+      events: []                  // sự kiện 1 lần cho UI: {type, ...}
+    };
+  }
+
+  const powered = s => s.pads[POWER_PAD] === 'tithe';
+
+  // Trạm ở node cuối đoạn seg (seg 0→pad P1 ... seg 3→pad P4; seg 4 → CỬA)
+  const padAtSeg = seg => seg < 4 ? BELT[seg] : null;
+
+  function canProcess(s, pad, kind){
+    const org = ORGS[s.pads[pad]];
+    if (!org || org.vao !== kind) return false;
+    if (org.atp && !powered(s)) return false;
+    return true;
+  }
+  const busy = (s, pad) => s.parcels.some(p => p.phase === 'transform' && padAtSeg(p.seg) === pad);
+  const queueAt = (s, pad) => s.parcels.filter(p => p.phase === 'queue' && padAtSeg(p.seg) === pad);
+
+  function place(s, pad, org){
+    if (!PADS.includes(pad) || !ORGS[org] || s.pads[pad]) return false;
+    if (Object.values(s.pads).includes(org)) return false;
+    s.pads[pad] = org;
+    s.events.push({ type:'place', pad, org });
+    if (org === 'lyso' && pad === NEAR_NUCLEUS){ s.lysoTimer = 0; s.events.push({ type:'lyso-warn' }); }
+    if (org === 'lucla') s.events.push({ type:'lucla' });
+    if (org === 'tithe' && pad !== POWER_PAD) s.events.push({ type:'tithe-misplug', pad });
+    return true;
+  }
+
+  function remove(s, pad){
+    const org = s.pads[pad];
+    if (!org) return null;
+    s.pads[pad] = null;
+    // kiện đang biến đổi tại trạm vừa gỡ → trả về hàng chờ, tuyệt đối không
+    // để nhánh transform đọc ORGS[null] (sập vòng mô phỏng)
+    for (const p of s.parcels){
+      if (p.phase === 'transform' && padAtSeg(p.seg) === pad){ p.phase = 'queue'; p.tt = 0; }
+    }
+    s.events.push({ type:'remove', pad, org });
+    if (org === 'lyso' && pad === NEAR_NUCLEUS && !s.nucleusAlive) s.healTimer = 0;
+    return org;
+  }
+
+  function setRun(s, on){ s.running = !!on; }
+
+  function substep(s){
+    const dt = SUB;
+    s.t += dt;
+
+    // nhân: chết / hồi
+    if (s.pads[NEAR_NUCLEUS] === 'lyso' && s.nucleusAlive){
+      s.lysoTimer += dt;
+      if (s.lysoTimer >= LYSO_KILL){ s.nucleusAlive = false; s.events.push({ type:'nucleus-dead' }); }
+    }
+    if (s.pads[NEAR_NUCLEUS] !== 'lyso' && !s.nucleusAlive){
+      s.healTimer += dt;
+      if (s.healTimer >= LYSO_HEAL){ s.nucleusAlive = true; s.events.push({ type:'nucleus-heal' }); }
+    }
+
+    if (!s.running) return;
+    if (!s.done) s.runT += dt;    // thời gian ca làm việc; đủ đơn thì đồng hồ đứng lại
+
+    // sinh kiện
+    if (s.nucleusAlive && !s.done){
+      s.spawnTimer += dt;
+      if (s.spawnTimer >= SPAWN_PERIOD){
+        if (s.parcels.length < MAX_LIVE){
+          s.spawnTimer -= SPAWN_PERIOD;
+          s.parcels.push({ id: s.nextId++, kind:'marn', seg:0, pos:0, phase:'move', tt:0 });
+          s.events.push({ type:'spawn' });
+        } else s.spawnTimer = SPAWN_PERIOD;   // ứ tới nguồn: chờ, không dồn xung
+      }
+    }
+
+    // nhịp ATP (để vẽ tia)
+    if (powered(s)){ s.atpTimer += dt; if (s.atpTimer >= ATP_PERIOD){ s.atpTimer -= ATP_PERIOD; s.events.push({ type:'atp' }); } }
+
+    // kiện chuyển động / biến đổi
+    for (const p of s.parcels){
+      if (p.phase === 'move'){
+        p.pos += dt / SEG_DUR;
+        if (p.pos >= 1){
+          p.pos = 1;
+          const pad = padAtSeg(p.seg);
+          if (pad === null){                        // tới CỬA
+            p.phase = 'exit';
+          } else if (canProcess(s, pad, p.kind) && !busy(s, pad) && queueAt(s, pad).length === 0){
+            p.phase = 'transform'; p.tt = TRANSFORM_T;
+          } else {
+            p.phase = 'queue';
+            s.events.push({ type:'jam', pad, n: queueAt(s, pad).length });
+          }
+        }
+      } else if (p.phase === 'transform'){
+        const pad = padAtSeg(p.seg);
+        const org = ORGS[s.pads[pad]];
+        if (!org){ p.phase = 'queue'; p.tt = 0; continue; }   // trạm biến mất giữa chừng
+        if (org.atp && !powered(s)) continue;                  // mất điện: máy đứng, kiện chờ trong máy
+        p.tt -= dt;
+        if (p.tt <= 0){
+          p.kind = org.ra;
+          p.phase = 'move'; p.seg += 1; p.pos = 0;
+        }
+      }
+    }
+
+    // xuất xưởng
+    const exiting = s.parcels.filter(p => p.phase === 'exit');
+    if (exiting.length){
+      s.parcels = s.parcels.filter(p => p.phase !== 'exit');
+      // Đủ đơn rồi thì KHÔNG dừng băng chuyền — người học cần vừa đọc lý thuyết
+      // vừa nhìn dây chuyền chạy. Chỉ ngừng đếm đơn để không hiện "13/8".
+      for (const _ of exiting){
+        if (!s.done){
+          s.out += 1;
+          s.events.push({ type:'exit', out: s.out });
+          if (s.out >= WIN){ s.done = true; s.events.push({ type:'win' }); }
+        } else {
+          s.events.push({ type:'exit-extra' });
+        }
+      }
+    }
+
+    // giải phóng hàng chờ: mỗi pad cho kiện đầu hàng vào máy nếu rảnh
+    for (const pad of BELT){
+      if (busy(s, pad)) continue;
+      const q = queueAt(s, pad);
+      if (q.length && canProcess(s, pad, q[0].kind)){
+        q[0].phase = 'transform'; q[0].tt = TRANSFORM_T;
+      }
+    }
+  }
+
+  function step(s, secs){
+    // __step(0) phải là "vẽ lại, không tiến thời gian" theo contract
+    const n = Math.round(secs / SUB);
+    for (let i = 0; i < n; i++) substep(s);
+  }
+
+  function snapshot(s){
+    const queues = {};
+    for (const pad of BELT) queues[pad] = queueAt(s, pad).length;
+    return {
+      t: +s.t.toFixed(4), runT: +s.runT.toFixed(4), running: s.running, done: s.done, out: s.out,
+      pads: { ...s.pads }, powered: powered(s), nucleusAlive: s.nucleusAlive,
+      parcels: s.parcels.map(p => ({ id:p.id, kind:p.kind, seg:p.seg, pos:+p.pos.toFixed(4), phase:p.phase, tt:+(p.tt||0).toFixed(4) })),
+      queues, win: WIN
+    };
+  }
+
+  const drainEvents = s => s.events.splice(0);
+
+  return { create, place, remove, setRun, step, snapshot, drainEvents,
+           ORGS, KINDS, KINDS_SACH, PADS, BELT, POWER_PAD, NEAR_NUCLEUS, WIN, SUB,
+           SPAWN_PERIOD, SEG_DUR, TRANSFORM_T };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = SIM;
+</script>
+
+<!-- ═══════════════════ LỚP GIAO DIỆN ═══════════════════ -->
+<script>
+'use strict';
+const UI = (function(){
+  const NSVG = 'http://www.w3.org/2000/svg';
+  const $ = s => document.querySelector(s);
+  const E = (t, a = {}, parent) => {
+    const n = document.createElementNS(NSVG, t);
+    for (const k in a) n.setAttribute(k, a[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+
+  /* ---------- hình học băng chuyền (chỉ UI biết pixel) ---------- */
+  const NODES = [
+    { x: 268, y: 352 },   // 0 NHÂN (cửa xuất kiện của nhân)
+    { x: 468, y: 236 },   // 1 P1
+    { x: 668, y: 452 },   // 2 P2
+    { x: 872, y: 236 },   // 3 P3
+    { x: 1042, y: 420 },  // 4 P4
+    { x: 1196, y: 352 }   // 5 CỬA XUẤT
+  ];
+  const PAD_XY = {
+    P1: NODES[1], P2: NODES[2], P3: NODES[3], P4: NODES[4],
+    // S1 phải đủ cao để bảng tên hai dòng (cao 40px, đặt ở y+48) không tràn qua tường dưới
+    S1: { x: 520, y: 508 }, S2: { x: 296, y: 196 }
+  };
+  // cubic bezier từng đoạn, control uốn chữ S
+  const SEGS = [];
+  for (let i = 0; i < 5; i++){
+    const a = NODES[i], b = NODES[i+1];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const k = (i % 2 === 0 ? 1 : -1) * 0.24;
+    SEGS.push({
+      a, b,
+      c1: { x: a.x + dx*0.34 - dy*k, y: a.y + dy*0.34 + dx*k },
+      c2: { x: b.x - dx*0.34 - dy*k, y: b.y - dy*0.34 + dx*k }
+    });
+  }
+  const bez = (s, t) => {
+    const u = 1 - t;
+    return {
+      x: u*u*u*s.a.x + 3*u*u*t*s.c1.x + 3*u*t*t*s.c2.x + t*t*t*s.b.x,
+      y: u*u*u*s.a.y + 3*u*u*t*s.c1.y + 3*u*t*t*s.c2.y + t*t*t*s.b.y
+    };
+  };
+  const segPoint = (seg, t) => bez(SEGS[seg], Math.min(1, Math.max(0, t)));
+
+  /* ---------- màu & glyph ---------- */
+  const KIND_STYLE = {
+    marn: { fill:'#dcecff', edge:'#3f8fe8' },
+    tho : { fill:'#eceff2', edge:'#8b98a6' },
+    gap : { fill:'#dcf5e6', edge:'#3fae6b' },
+    goi : { fill:'#fde3f1', edge:'#ea5fae' }
+  };
+  const ORG_COLOR = { ribo:'#3fae6b', lnc:'#3f8fe8', golgi:'#ea5fae', tuiti:'#2fa8b8', tithe:'#f0862c', lyso:'#e05648', lucla:'#4f9e46' };
+
+  function kindGlyph(kind, s){
+    const k = s / 24;
+    const g = b => `<g transform="scale(${k})">${b}</g>`;
+    switch (kind){
+      case 'marn': return g(`<path d="M4 8q8-6 16 0v9q-8-6-16 0Z" fill="#3f8fe8" opacity=".85"/><path d="M6 11h12M6 14h9" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`);
+      case 'tho' : return g(`<path d="M5 14q2-8 8-7t6 6q1 6-6 6-7 1-8-5Z" fill="none" stroke="#66727f" stroke-width="2.6" stroke-linecap="round"/><path d="M8 12q4-3 8 1" stroke="#66727f" stroke-width="2.2" fill="none" stroke-linecap="round"/>`);
+      case 'gap' : return g(`<path d="M6 16q0-9 6-10t6 10q-2 4-6 4t-6-4Z" fill="#3fae6b"/><path d="M9 12q3-4 6 0" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>`);
+      case 'goi' : return g(`<rect x="5" y="7" width="14" height="12" rx="2.5" fill="#ea5fae"/><path d="M12 7v12M5 12h14" stroke="#fff" stroke-width="1.8"/><path d="M9 7q3-4 3 0 0-4 3 0" fill="none" stroke="#fff" stroke-width="1.6"/>`);
+    }
+    return '';
+  }
+
+  function orgGlyph(id, s){
+    const k = s / 48, c = ORG_COLOR[id];
+    const g = b => `<g transform="scale(${k})">${b}</g>`;
+    switch (id){
+      case 'ribo': return g(`<circle cx="18" cy="21" r="10" fill="${c}"/><circle cx="31" cy="27" r="7.5" fill="${c}" opacity=".7"/><circle cx="15" cy="35" r="4" fill="${c}" opacity=".5"/>`);
+      case 'lnc': return g(`<path d="M7 13h34M9 22h32M7 31h34M9 40h30" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/><g fill="${c}"><circle cx="14" cy="9" r="2.3"/><circle cx="25" cy="9" r="2.3"/><circle cx="36" cy="9" r="2.3"/><circle cx="17" cy="27" r="2.3"/><circle cx="31" cy="27" r="2.3"/></g>`);
+      case 'golgi': return g(`<g fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round"><path d="M10 13q14-6 28 0"/><path d="M9 22q15-6 30 0"/><path d="M11 31q13-6 26 0"/><path d="M14 39q10-5 20 0"/></g><circle cx="8" cy="42" r="3" fill="${c}" opacity=".7"/>`);
+      case 'tuiti': return g(`<circle cx="24" cy="24" r="17" fill="${c}" opacity=".2"/><circle cx="24" cy="24" r="17" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="5 4"/><circle cx="20" cy="21" r="3.6" fill="${c}"/><circle cx="29" cy="27" r="3" fill="${c}"/>`);
+      case 'tithe': return g(`<ellipse cx="24" cy="24" rx="20" ry="13" fill="${c}" opacity=".2"/><ellipse cx="24" cy="24" rx="20" ry="13" fill="none" stroke="${c}" stroke-width="3"/><path d="M9 24c4-7 6 7 10 0s6 7 10 0 6 7 10 0" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/>`);
+      case 'lyso': return g(`<circle cx="24" cy="24" r="17" fill="${c}" opacity=".22"/><circle cx="24" cy="24" r="17" fill="none" stroke="${c}" stroke-width="3"/><g fill="${c}"><circle cx="19" cy="20" r="2.8"/><circle cx="29" cy="22" r="2.4"/><circle cx="24" cy="30" r="3"/></g>`);
+      case 'lucla': return g(`<ellipse cx="24" cy="24" rx="20" ry="13.5" fill="${c}" opacity=".2"/><ellipse cx="24" cy="24" rx="20" ry="13.5" fill="none" stroke="${c}" stroke-width="3"/><g fill="${c}"><rect x="13" y="19" width="8" height="10" rx="2.5"/><rect x="25" y="16" width="8" height="10" rx="2.5" opacity=".75"/></g>`);
+    }
+    return '';
+  }
+
+  /* ---------- trạng thái UI ---------- */
+  let sim = SIM.create();
+  let auto = true;                // false sau khi __step được gọi (chế độ máy review)
+  let picked = null;
+  let raf = null, lastTs = 0, playT0 = 0;
+  let layerSt, layerParcel, layerLbl, layerFx, layerCable;
+  let lastPadsKey = '';           // chỉ dựng lại layer trạm khi pads đổi
+  const saidOnce = new Set();
+
+  /* ---------- dựng cảnh tĩnh ---------- */
+  function buildScene(){
+    const svg = $('#stage'); svg.innerHTML = '';
+
+    // sàn + tường tế bào
+    E('rect', { x:34, y:26, width:1212, height:608, rx:56, fill:'#efc478', stroke:'#3a2e24', 'stroke-width':5 }, svg);
+    E('rect', { x:58, y:50, width:1164, height:560, rx:40, fill:'#fdf8ec', stroke:'#3a2e24', 'stroke-width':4 }, svg);
+    const dots = E('g', { fill:'#ead9b8' }, svg);
+    for (let gx = 110; gx < 1180; gx += 62)
+      for (let gy = 100; gy < 580; gy += 62) E('circle', { cx:gx, cy:gy, r:2.5 }, dots);
+
+    // nhãn khu
+    const tag = E('g', {}, svg);
+    E('rect', { x:498, y:36, width:284, height:34, rx:10, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':3 }, tag);
+    const tagT = E('text', { x:640, y:59, 'text-anchor':'middle', class:'biglbl' }, tag);
+    tagT.textContent = 'BÊN TRONG MỘT TẾ BÀO';
+
+    // CỬA XUẤT (khoét tường phải)
+    E('rect', { x:1206, y:300, width:44, height:104, rx:10, fill:'#fdf8ec', stroke:'#3a2e24', 'stroke-width':4 }, svg);
+    const aw = E('g', {}, svg);
+    E('path', { d:'M1188 296h72l-8 26h-56Z', fill:'#e05648', stroke:'#3a2e24', 'stroke-width':3.5 }, aw);
+    E('path', { d:'M1206 296l-6 26M1224 296l0 26M1242 296l6 26', stroke:'#fff', 'stroke-width':5, opacity:.85 }, aw);
+    const doorT = E('text', { x:1224, y:428, 'text-anchor':'middle', class:'stlbl' }, svg);
+    doorT.textContent = 'CỬA GIAO HÀNG';
+    // chồng kiện đã xuất (ngoài cửa)
+    E('g', { id:'donestack' }, svg);
+
+    // BĂNG CHUYỀN
+    let d = `M${NODES[0].x} ${NODES[0].y}`;
+    for (const s of SEGS) d += `C${s.c1.x} ${s.c1.y} ${s.c2.x} ${s.c2.y} ${s.b.x} ${s.b.y}`;
+    E('path', { d, fill:'none', stroke:'#e2d2ae', 'stroke-width':34, 'stroke-linecap':'round' }, svg);
+    E('path', { d, fill:'none', stroke:'#b9a67e', 'stroke-width':2.5, 'stroke-dasharray':'2 20', 'stroke-linecap':'round' }, svg);
+    // mũi tên chiều chạy
+    for (let i = 0; i < 5; i++){
+      const p = segPoint(i, 0.5), q = segPoint(i, 0.56);
+      const ang = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI;
+      E('path', { d:'M-7 -6 L7 0 L-7 6 Z', fill:'#a5906a',
+        transform:`translate(${p.x},${p.y}) rotate(${ang})` }, svg);
+    }
+
+    // dây cáp điện S1 → P1, S1 → P3
+    layerCable = E('g', {}, svg);
+    drawCable(PAD_XY.S1, PAD_XY.P1);
+    drawCable(PAD_XY.S1, PAD_XY.P3);
+
+    // nối Ô KHO vào vai nhân — cho thấy nó SÁT nhân (bẫy lysosome)
+    E('path', { d:'M296 252 Q286 292 246 318', fill:'none', stroke:'#c9b389',
+      'stroke-width':4, 'stroke-dasharray':'7 7', 'stroke-linecap':'round' }, svg);
+
+    // NHÂN (dựng sẵn)
+    const nuc = E('g', { id:'nucleus' }, svg);
+    E('ellipse', { cx:190, cy:435, rx:98, ry:16, fill:'rgba(58,46,36,.12)' }, nuc);
+    E('path', { d:'M96 430q0-118 96-118t96 118Z', fill:'#c9b6f7', stroke:'#3a2e24', 'stroke-width':4.5 }, nuc);
+    E('path', { d:'M120 430q0-95 72-95', fill:'none', stroke:'#fff', 'stroke-width':7, opacity:.5, 'stroke-linecap':'round' }, nuc);
+    E('rect', { x:236, y:268, width:22, height:52, rx:6, fill:'#8a6cf0', stroke:'#3a2e24', 'stroke-width':3.5, transform:'rotate(14 247 294)' }, nuc);
+    // cửa sổ ADN
+    E('circle', { cx:176, cy:378, r:30, fill:'#f3edff', stroke:'#3a2e24', 'stroke-width':3.5 }, nuc);
+    E('path', { d:'M162 366q14 8 0 16t0 16M190 366q-14 8 0 16t0 16', fill:'none', stroke:'#8a6cf0', 'stroke-width':3, 'stroke-linecap':'round' }, nuc);
+    E('path', { d:'M165 372h22M165 382h22M165 392h22', stroke:'#c9b6f7', 'stroke-width':2.4 }, nuc);
+    // cổng xuất kiện
+    E('rect', { x:252, y:334, width:34, height:36, rx:7, fill:'#3a2e24' }, nuc);
+    E('rect', { x:258, y:340, width:22, height:24, rx:4, fill:'#8a6cf0' }, nuc);
+    const nucTag = E('g', {}, nuc);
+    E('rect', { x:118, y:440, width:144, height:42, rx:9, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':3 }, nucTag);
+    const nt = E('text', { x:190, y:459, 'text-anchor':'middle', class:'stlbl' }, nucTag);
+    nt.textContent = 'PHÒNG BẢN THIẾT KẾ';
+    const nt2 = E('text', { x:190, y:474, 'text-anchor':'middle', 'font-size':11.5,
+      'font-style':'italic', fill:'#8a7a66' }, nucTag);
+    nt2.textContent = 'nhân tế bào';
+
+    // pad
+    for (const pid of SIM.PADS) buildPad(pid, svg);
+
+    layerSt = E('g', {}, svg);      // nhà xưởng đã đặt
+    layerParcel = E('g', {}, svg);  // kiện hàng
+    layerLbl = E('g', {}, svg);     // bảng tên trạm — VẼ SAU kiện hàng để chữ không bị che
+    layerFx = E('g', {}, svg);      // tia chớp, pháo giấy
+  }
+
+  function drawCable(a, b){
+    const mx = (a.x + b.x) / 2, my = Math.max(a.y, b.y) + 26;
+    E('path', { d:`M${a.x} ${a.y - 20}Q${mx} ${my} ${b.x} ${b.y + 46}`,
+      fill:'none', stroke:'#e8b64a', 'stroke-width':6, 'stroke-dasharray':'10 7', 'stroke-linecap':'round', opacity:.9 }, layerCable);
+    E('circle', { cx:b.x, cy:b.y + 46, r:6, fill:'#e8b64a', stroke:'#3a2e24', 'stroke-width':2.5 }, layerCable);
+  }
+
+  function buildPad(pid, svg){
+    const p = PAD_XY[pid];
+    const g = E('g', { class:'pad-hit', 'data-pad':pid, tabindex:0, role:'button' }, svg);
+    E('rect', { class:'pad-ring', x:p.x-62, y:p.y-56, width:124, height:112, rx:18,
+      fill:'rgba(255,255,255,.45)', stroke:'#c9b389', 'stroke-width':3, 'stroke-dasharray':'9 8' }, g);
+    const num = E('text', { class:'padnum', x:p.x, y:p.y - 66, 'text-anchor':'middle' }, g);
+    const hint = E('text', { class:'padhint', x:p.x, y:p.y + 4, 'text-anchor':'middle' }, g);
+    if (pid === 'S1'){ num.textContent = 'Ổ ĐIỆN ⚡'; hint.textContent = 'cắm máy phát điện'; }
+    else if (pid === 'S2'){ num.textContent = 'GÓC KHO'; hint.textContent = 'sát vách nhân'; }
+    else { num.textContent = 'TRẠM ' + pid[1]; hint.textContent = 'đặt máy vào đây'; }
+    g.addEventListener('click', ev => { ev.stopPropagation(); padTapped(pid); });
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter') padTapped(pid); });
+  }
+
+  /* ---------- vẽ động theo snapshot ---------- */
+  function render(){
+    const s = SIM.snapshot(sim);
+
+    // trạm — CHỈ dựng lại khi bố trí pads / nguồn điện / trạng thái chạy đổi,
+    // nếu xoá-vẽ mỗi khung hình thì animation "bang" restart liên tục → trạm vô hình
+    const padsJson = JSON.stringify(s.pads);
+    const padsKey = padsJson + '|' + s.powered + '|' + s.running;
+    if (padsKey !== lastPadsKey){
+      const layoutChanged = !lastPadsKey.startsWith(padsJson + '|');
+      lastPadsKey = padsKey;
+      drawStations(s, layoutChanged);   // pop chỉ khi bố trí đổi, không pop khi bật/tắt điện
+    }
+
+    drawNucleusAndParcels(s);
+    drawTally(s);
+  }
+
+  function drawStations(s, pop = true){
+    layerSt.innerHTML = ''; layerLbl.innerHTML = '';
+    for (const pid of SIM.PADS){
+      const org = s.pads[pid];
+      const p = PAD_XY[pid];
+      const padG = document.querySelector(`[data-pad="${pid}"]`);
+      padG.classList.toggle('filled', !!org);
+      padG.querySelector('.padhint').style.display = org ? 'none' : '';
+      if (!org) continue;
+      const info = SIM.ORGS[org];
+      const g = E('g', { class:'stgroup' + (pop ? ' bang' : ''), 'data-stpad':pid }, layerSt);
+      // nhà máy giấy
+      E('ellipse', { cx:p.x, cy:p.y + 46, rx:56, ry:10, fill:'rgba(58,46,36,.12)' }, g);
+      E('rect', { x:p.x-52, y:p.y-30, width:104, height:74, rx:12, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':4 }, g);
+      E('path', { d:`M${p.x-60} ${p.y-24}q60-38 120 0l-6 12h-108Z`, fill:ORG_COLOR[org], stroke:'#3a2e24', 'stroke-width':4 }, g);
+      const ic = E('g', { transform:`translate(${p.x-24},${p.y-16})` }, g);
+      ic.innerHTML = orgGlyph(org, 48);
+      // bảng tên hai dòng (tên nghề to + tên trong sách nhỏ) — đặt ở lớp trên cùng
+      const lg = E('g', {}, layerLbl);
+      const tagW = Math.max(96, Math.max(info.ten.length, info.sach.length) * 7.6 + 20);
+      E('rect', { x:p.x - tagW/2, y:p.y + 48, width:tagW, height:40, rx:9, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':2.5 }, lg);
+      const t = E('text', { x:p.x, y:p.y + 64, 'text-anchor':'middle', class:'stlbl', 'font-size':'13' }, lg);
+      t.textContent = info.ten;
+      const t2 = E('text', { x:p.x, y:p.y + 80, 'text-anchor':'middle', 'font-size':'11.5',
+        'font-style':'italic', fill:'#8a7a66' }, lg);
+      t2.textContent = info.sach;
+      // pin cho trạm cần ATP
+      if (info.atp){
+        const ok = s.powered;
+        E('rect', { x:p.x+28, y:p.y-46, width:30, height:17, rx:4, fill: ok ? '#3fae6b' : '#e05648', stroke:'#3a2e24', 'stroke-width':2.5 }, g);
+        E('rect', { x:p.x+58, y:p.y-42, width:5, height:9, rx:2, fill:'#3a2e24' }, g);
+        if (ok) E('path', { d:`M${p.x+40} ${p.y-44}l-5 8h6l-5 8`, stroke:'#fff', 'stroke-width':2.4, fill:'none', 'stroke-linecap':'round' }, g);
+        else { const tx = E('text', { x:p.x+43, y:p.y-33, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'800', fill:'#fff' }, g); tx.textContent = '!'; }
+      }
+      // trạm nằm im (không xử lý được / mất điện): mờ
+      const idleBelt = SIM.BELT.includes(pid) && sim.running &&
+        ((info.atp && !s.powered) || (info.vao === null));
+      if (idleBelt) g.style.opacity = .55;
+      g.addEventListener('click', () => removeStation(pid));
+    }
+  }
+
+  function drawNucleusAndParcels(s){
+    // nhân chết / sống
+    const nuc = $('#nucleus');
+    if (nuc){
+      nuc.style.filter = s.nucleusAlive ? '' : 'grayscale(1) brightness(.85)';
+      nuc.style.opacity = s.nucleusAlive ? 1 : .75;
+    }
+
+    // kiện hàng
+    layerParcel.innerHTML = '';
+    const queueCount = {};
+    for (const p of s.parcels){
+      let pt, rot = 0, scale = 1;
+      if (p.phase === 'queue'){
+        const pad = p.seg < 4 ? SIM.BELT[p.seg] : null;
+        const qi = queueCount[pad] = (queueCount[pad] ?? -1) + 1;
+        pt = segPoint(p.seg, 1 - 0.085 * (qi + 1));
+        rot = (qi % 2 ? -8 : 8);
+      } else if (p.phase === 'transform'){
+        pt = segPoint(p.seg, 1);
+        const tt = Number.isFinite(p.tt) ? p.tt : 0;
+        scale = 1 + 0.18 * Math.sin((1 - tt / SIM.TRANSFORM_T) * Math.PI);
+      } else {
+        pt = segPoint(p.seg, p.pos);
+      }
+      const st = KIND_STYLE[p.kind];
+      const g = E('g', { transform:`translate(${pt.x},${pt.y - 12}) rotate(${rot}) scale(${scale})` }, layerParcel);
+      E('ellipse', { cx:0, cy:15, rx:14, ry:4, fill:'rgba(58,46,36,.15)' }, g);
+      E('rect', { x:-14, y:-14, width:28, height:28, rx:7, fill:st.fill, stroke:st.edge, 'stroke-width':3 }, g);
+      const ic = E('g', { transform:'translate(-12,-12)' }, g);
+      ic.innerHTML = kindGlyph(p.kind, 24);
+    }
+    // bong bóng "!" trên hàng ứ ≥3 (không dùng animation pop — layer này vẽ lại mỗi khung)
+    for (const pad in queueCount){
+      if (queueCount[pad] + 1 >= 3){
+        const p = PAD_XY[pad];
+        const wig = Math.sin(s.t * 6.25) * 4;   // theo giờ sim → cùng state là cùng khung hình
+        const g = E('g', { transform:`translate(${p.x - 74},${p.y - 66}) rotate(${wig})` }, layerParcel);
+        E('circle', { cx:0, cy:0, r:15, fill:'#fff', stroke:'#e05648', 'stroke-width':3.5 }, g);
+        const t = E('text', { x:0, y:6, 'text-anchor':'middle', 'font-size':'18', 'font-weight':'900', fill:'#e05648' }, g);
+        t.textContent = '!';
+      }
+    }
+  }
+
+  function drawTally(s){
+    $('#out').textContent = s.out + '/' + s.win;
+    const crates = $('#crates');
+    if (crates.childElementCount !== s.win){
+      crates.innerHTML = '';
+      for (let i = 0; i < s.win; i++) crates.appendChild(document.createElement('i'));
+    }
+    [...crates.children].forEach((c, i) => c.classList.toggle('f', i < s.out));
+
+    // chồng kiện ngoài cửa
+    const ds = document.getElementById('donestack');
+    if (ds && ds.childElementCount !== s.out){
+      ds.innerHTML = '';
+      for (let i = 0; i < s.out; i++){
+        const col = Math.floor(i / 4), row = i % 4;
+        E('rect', { x:1216 + col*20 - 10, y:392 - row*15, width:17, height:13, rx:3,
+          fill:'#fde3f1', stroke:'#ea5fae', 'stroke-width':2.5 }, ds);
+      }
+    }
+  }
+
+  /* ---------- sự kiện từ sim → thoại + hiệu ứng ---------- */
+  /* ---------- MẦM: hình, mặt, thoại ----------
+     Ba luật cứng: (1) Mầm chỉ được HỎI, mọi phán đoán kết thúc bằng dấu hỏi;
+     (2) Mầm không bao giờ phán xử — mô phỏng phán xử; (3) Mầm không biết
+     trước thứ người chơi chưa thấy. Toàn bộ thoại dưới đây viết theo ba luật đó. */
+  let mamStage = 1;                       // 1..5, lớn dần qua mọi thế giới
+  const MAM_STAGE_NAME = ['', 'hai lá', 'ba lá', 'ra cành', 'ra hoa', 'có quả'];
+
+  function mamGlyph(stage, mood){
+    const leaf = c => `<path d="M23 13q-9-1-11-8 8-3 11 4Z" fill="${c}" stroke="#1d5a2e" stroke-width="1.6"/>
+                       <path d="M23 13q9-1 11-8-8-3-11 4Z" fill="${c}" stroke="#1d5a2e" stroke-width="1.6"/>`;
+    const extra = stage >= 2 ? `<path d="M23 11q0-7 0-9" stroke="#1d5a2e" stroke-width="1.8" fill="none"/>
+                                <path d="M23 6q6-2 8-6-7-1-8 4Z" fill="#7ec96a" stroke="#1d5a2e" stroke-width="1.5"/>` : '';
+    const eyes = mood === 'oh'
+      ? `<circle cx="18" cy="30" r="3.4" fill="#12324f"/><circle cx="29" cy="30" r="3.4" fill="#12324f"/>`
+      : mood === 'yay'
+      ? `<path d="M15 30q3-4 6 0M26 30q3-4 6 0" stroke="#12324f" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
+      : `<circle cx="18" cy="30" r="2.6" fill="#12324f"/><circle cx="29" cy="30" r="2.6" fill="#12324f"/>`;
+    const mouth = mood === 'yay'
+      ? `<path d="M18 37q5 6 10 0q-5 3-10 0Z" fill="#e8657f" stroke="#12324f" stroke-width="1.8"/>`
+      : mood === 'oh'
+      ? `<ellipse cx="23" cy="38" rx="3" ry="3.6" fill="#e8657f" stroke="#12324f" stroke-width="1.8"/>`
+      : `<path d="M19 37q4 3 8 0" stroke="#12324f" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    return `${extra}${leaf('#7ec96a')}
+      <circle cx="23" cy="31" r="15" fill="#4a9df0" stroke="#12324f" stroke-width="2.6"/>
+      <ellipse cx="23" cy="32" rx="10.5" ry="11" fill="#fdfbf4" stroke="#12324f" stroke-width="2"/>
+      <circle cx="18" cy="30" r="5" fill="none" stroke="#12324f" stroke-width="1.8"/>
+      <circle cx="29" cy="30" r="5" fill="none" stroke="#12324f" stroke-width="1.8"/>
+      <path d="M23 30h1" stroke="#12324f" stroke-width="1.8"/>
+      ${eyes}${mouth}
+      <path d="M9 44q14-6 28 0l-3 6H12Z" fill="#fdfbf4" stroke="#12324f" stroke-width="2.4"/>
+      <path d="M18 44l5 6 5-6q-5 3-10 0Z" fill="#e4453c" stroke="#12324f" stroke-width="2"/>`;
+  }
+
+  function drawMam(mood = 'calm'){
+    const f = $('#mamFace');
+    if (f) f.innerHTML = mamGlyph(mamStage, mood);
+  }
+
+  /* Cây của Mầm giữa thị trấn — cùng một giai đoạn ở mọi thế giới, nên nhìn
+     một cái là biết bạn đã đi được bao xa, dù đang đứng ở môn nào. */
+  function drawMapTree(){
+    const g = $('#mapTree'), m = $('#mapMam');
+    if (!g || !m) return;
+    const cx = 585, cy = 252, st = mamStage;
+    const h = [0, 26, 46, 70, 88, 104][st];         // chiều cao thân theo giai đoạn
+    const crown = [0, 17, 25, 35, 43, 50][st];      // bán kính tán
+    let out = `<ellipse cx="${cx}" cy="${cy + 6}" rx="${crown + 14}" ry="9" fill="rgba(58,46,36,.14)"/>`;
+    if (st === 1){
+      out += `<path d="M${cx-14} ${cy-6}h28l-4 14h-20Z" fill="#c98a4b" stroke="#3a2e24" stroke-width="3"/>`;
+    }
+    out += `<path d="M${cx-4} ${cy} L${cx-3} ${cy-h} h6 L${cx+4} ${cy}Z" fill="#a4703d" stroke="#3a2e24" stroke-width="3"/>`;
+    out += `<circle cx="${cx}" cy="${cy-h-crown*0.45}" r="${crown}" fill="#8ecf72" stroke="#3a2e24" stroke-width="3"/>`;
+    if (st >= 3) out += `<circle cx="${cx-crown*0.7}" cy="${cy-h-crown*0.15}" r="${crown*0.6}" fill="#7ec462" stroke="#3a2e24" stroke-width="3"/>
+                         <circle cx="${cx+crown*0.7}" cy="${cy-h-crown*0.2}" r="${crown*0.55}" fill="#9bd982" stroke="#3a2e24" stroke-width="3"/>`;
+    if (st >= 4) for (let i = 0; i < 5; i++){
+      const a = i / 5 * Math.PI * 2;
+      out += `<circle cx="${(cx + Math.cos(a)*crown*0.72).toFixed(1)}" cy="${(cy-h-crown*0.45 + Math.sin(a)*crown*0.62).toFixed(1)}" r="4.6" fill="#fff" stroke="#e58fb4" stroke-width="2.4"/>`;
+    }
+    if (st >= 5) for (let i = 0; i < 4; i++){
+      const a = i / 4 * Math.PI * 2 + 0.6;
+      out += `<circle cx="${(cx + Math.cos(a)*crown*0.66).toFixed(1)}" cy="${(cy-h-crown*0.4 + Math.sin(a)*crown*0.6).toFixed(1)}" r="5.2" fill="#f0862c" stroke="#3a2e24" stroke-width="2.4"/>`;
+    }
+    out += `<rect x="${cx-56}" y="${cy+16}" width="112" height="34" rx="10" fill="#fffdf6" stroke="#3a2e24" stroke-width="3"/>
+            <text x="${cx}" y="${cy+31}" text-anchor="middle" font-size="13" font-weight="800" fill="#3a2e24">Cây của Mầm</text>
+            <text x="${cx}" y="${cy+45}" text-anchor="middle" font-size="11.5" font-style="italic" fill="#8a7a66">${MAM_STAGE_NAME[mamStage]}</text>`;
+    g.innerHTML = out;
+    // Mầm đứng bên phải bảng tên, không chạm vào công trình nào
+    m.innerHTML = `<g transform="translate(${cx + 62},${cy - 34}) scale(1.45)">${mamGlyph(mamStage, 'yay')}</g>`;
+  }
+
+  // Mầm nói. Mọi câu ở đây đều là thắc mắc hoặc phán đoán có dấu hỏi.
+  function mamSay(text, mood = 'calm', key){
+    if (key){ if (saidOnce.has('mam:' + key)) return; saidOnce.add('mam:' + key); }
+    const b = $('#mamBubble');
+    $('#mamTxt').textContent = text;
+    b.classList.remove('quiet', 'pop'); void b.offsetWidth; b.classList.add('pop');
+    document.body.classList.add('spk-mam'); document.body.classList.remove('spk-bac');
+    drawMam(mood);
+  }
+
+  function speak(text, key){
+    if (key){ if (saidOnce.has(key)) return; saidOnce.add(key); }
+    const b = $('#bubble');
+    $('#bubbleTxt').textContent = text;
+    b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+    document.body.classList.add('spk-bac'); document.body.classList.remove('spk-mam');
+  }
+
+  // Trong lúc chơi CHỈ Mầm nói. Bác trưởng xưởng chỉ mở màn, gỡ bí khi tắc lâu,
+  // và tổng kết cuối chặng — để hai giọng không cùng lúc chen nhau.
+  function handleEvents(){
+    for (const ev of SIM.drainEvents(sim)){
+      switch (ev.type){
+        case 'jam':
+          if (ev.n + 1 >= 2){
+            const nm = ev.pad === 'S1' ? 'ổ điện' : 'trạm ' + ev.pad[1];
+            mamSay(`Ơ, hàng dồn cục trước ${nm} kìa. Chỗ đó thiếu máy gì nhỉ?`, 'oh', 'jam-' + ev.pad);
+          }
+          break;
+        case 'lyso-warn':
+          mamSay('Ui, cái thùng nước tiêu hoá kê sát vách nhân... có sao không ta?', 'oh');
+          break;
+        case 'nucleus-dead':
+          mamSay('Phòng bản thiết kế xám hết rồi, không thấy tờ nào ra nữa. Là do cái thùng đó hả bạn?', 'oh');
+          break;
+        case 'nucleus-heal':
+          mamSay('May quá, phòng bản thiết kế sáng lại rồi.', 'yay');
+          break;
+        case 'lucla':
+          mamSay('Máy này để làm gì ta? Mình chờ mãi mà chưa thấy nó nhận hàng nào cả.', 'oh', 'lucla');
+          break;
+        case 'tithe-misplug':
+          mamSay('Máy phát điện để chỗ này có ra điện không nhỉ? Mình thấy có cái ổ điện với dây ở kia mà...', 'oh', 'misplug');
+          break;
+        case 'atp':
+          fxBolt();
+          if (saidOnce.has('mam:nopower'))
+            mamSay('A, đèn xanh hết rồi! Vậy hồi đó máy đứng im là tại thiếu điện thật hả?', 'yay', 'power-on');
+          break;
+        case 'exit':
+          fxConfetti();
+          mamSay('Ra được một kiện rồi! Mình đếm giúp bạn nha.', 'yay', 'first-exit');
+          break;
+        case 'win': if (auto) doneTimer = setTimeout(showDone, 900); else showDone(); break;
+      }
+    }
+    // Mầm thắc mắc về đèn đỏ (xem trạng thái, nói một lần)
+    const s = SIM.snapshot(sim);
+    if (sim.running && !s.powered){
+      for (const pid of SIM.BELT){
+        const org = s.pads[pid];
+        if (org && SIM.ORGS[org].atp && s.queues[pid] >= 1){
+          mamSay('Máy có rồi mà cứ đứng im. Cái đèn đỏ trên nóc nó là sao ta? Hay tại chưa có điện?', 'oh', 'nopower');
+        }
+      }
+    }
+  }
+
+  // Tắc lâu quá thì bác trưởng xưởng mới lên tiếng — bác biết nghề nên bác gỡ bí,
+  // nhưng bác không nói thẳng đáp án.
+  function checkStuck(){
+    if (!sim.running || sim.done || sim.out > 0) return;
+    if (performance.now() - lastActionAt < 40000) return;
+    speak('Nhìn chỗ hàng đứng lại ấy. Máy nào cần điện thì trên nóc nó có cái đèn — đèn còn đỏ là chưa chạy được.', 'stuck');
+  }
+
+  function fxBolt(){
+    for (const target of ['P1','P3']){
+      const a = PAD_XY.S1, b = PAD_XY[target];
+      const bolt = E('g', {}, layerFx);
+      bolt.innerHTML = `<path d="M0 -9l-6 10h7l-6 10" stroke="#f2b722" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+      const t0 = performance.now(), dur = 620;
+      const mx = (a.x + b.x)/2, my = Math.max(a.y, b.y) + 26;
+      (function anim(now){
+        const t = Math.min(1, (now - t0) / dur);
+        const u = 1 - t;
+        const x = u*u*(a.x) + 2*u*t*mx + t*t*(b.x);
+        const y = u*u*(a.y - 20) + 2*u*t*my + t*t*(b.y + 46);
+        bolt.setAttribute('transform', `translate(${x},${y})`);
+        bolt.setAttribute('opacity', 1 - t*0.4);
+        if (t < 1 && bolt.parentNode) requestAnimationFrame(anim); else bolt.remove();
+      })(t0);
+    }
+  }
+
+  function fxConfetti(){
+    const door = NODES[5];
+    const cols = ['#f2b722','#ea5fae','#3f8fe8','#3fae6b','#f0862c'];
+    for (let i = 0; i < 14; i++){
+      const r = E('rect', { x:-4, y:-4, width:8, height:8, rx:2, fill:cols[i % cols.length] }, layerFx);
+      const ang = (i / 14) * Math.PI * 2, sp = 60 + (i % 5) * 22;
+      const t0 = performance.now(), dur = 700;
+      (function anim(now){
+        const t = Math.min(1, (now - t0) / dur);
+        const x = door.x + Math.cos(ang) * sp * t;
+        const y = door.y - 20 + Math.sin(ang) * sp * t + 70 * t * t;
+        r.setAttribute('transform', `translate(${x},${y}) rotate(${t * 260})`);
+        r.setAttribute('opacity', 1 - t);
+        if (t < 1 && r.parentNode) requestAnimationFrame(anim); else r.remove();
+      })(t0);
+    }
+  }
+
+  /* ---------- khay & kéo thả ---------- */
+  function buildTray(){
+    const board = $('#board'); board.innerHTML = '';
+    for (const id in SIM.ORGS){
+      const o = SIM.ORGS[id];
+      const c = document.createElement('div');
+      c.className = 'chip'; c.dataset.org = id;
+      c.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40"><g>${orgGlyph(id, 40)}</g></svg>` +
+        `<b>${o.ten}</b><small><i>${o.sach}</i></small>`;
+      c.addEventListener('click', () => pickUp(id));
+      board.appendChild(c);
+    }
+    refreshTray();
+  }
+  function refreshTray(){
+    const s = SIM.snapshot(sim);
+    const used = Object.values(s.pads);
+    document.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('used', used.includes(c.dataset.org));
+      c.classList.toggle('sel', hero.carrying === c.dataset.org);
+    });
+  }
+
+  function showInfo(id){
+    const o = SIM.ORGS[id];
+    $('#ic-nm').innerHTML = `${o.ten} <span style="font-weight:600;font-size:13px;color:var(--muted)">— trong sách gọi là <i>${o.sach}</i></span>`;
+    $('#ic-nm').style.color = ORG_COLOR[id];
+    $('#ic-what').textContent = o.lam;
+    $('#ic-in').textContent = o.vao ? SIM.KINDS[o.vao] : 'không cần gì';
+    $('#ic-out').textContent = o.ra ? SIM.KINDS[o.ra] : (o.power ? 'điện ⚡' : 'không làm ra hàng');
+    const w = $('#ic-warn');
+    if (o.hint){ w.textContent = 'Lưu ý: ' + o.hint; w.style.display = ''; } else w.style.display = 'none';
+    $('#infocard').classList.add('on');
+  }
+  const hideInfo = () => $('#infocard').classList.remove('on');
+
+  /* ---------- MẦM ĐI LÀM: chạm đâu Mầm đi tới đó, vác máy trên đầu ----------
+     Thay hẳn kéo-thả. Chạm máy ở khay → Mầm chạy tới khay lấy, đội lên đầu.
+     Chạm trạm → Mầm chạy tới đặt xuống. Chạm trạm có máy → Mầm tới gỡ về.
+     Phím: mũi tên đi lại, Enter đặt/gỡ ở trạm gần nhất, 1-7 lấy máy, Esc trả máy. */
+  const WALK_SPEED = 330;                       // px sân khấu / giây
+  const hero = { x: 640, y: 528, tx: 640, ty: 528, carrying: null, onArrive: null, face: 1 };
+  const keys = new Set();
+
+  function heroWalkTo(x, y, onArrive){
+    // giữ Mầm trong lòng tế bào
+    hero.tx = Math.min(1160, Math.max(105, x));
+    hero.ty = Math.min(540, Math.max(105, y));
+    hero.onArrive = onArrive || null;
+    if (hero.tx !== hero.x) hero.face = hero.tx > hero.x ? 1 : -1;
+  }
+
+  function heroTick(dt){
+    // phím mũi tên: đi tự do, huỷ đích đang chờ
+    let kx = 0, ky = 0;
+    if (keys.has('ArrowLeft')) kx -= 1;
+    if (keys.has('ArrowRight')) kx += 1;
+    if (keys.has('ArrowUp')) ky -= 1;
+    if (keys.has('ArrowDown')) ky += 1;
+    if (kx || ky){
+      const l = Math.hypot(kx, ky);
+      hero.tx = hero.x + (kx / l) * WALK_SPEED * dt;
+      hero.ty = hero.y + (ky / l) * WALK_SPEED * dt;
+      hero.tx = Math.min(1160, Math.max(105, hero.tx));
+      hero.ty = Math.min(540, Math.max(105, hero.ty));
+      hero.onArrive = null;
+      if (kx) hero.face = kx > 0 ? 1 : -1;
+    }
+    const dx = hero.tx - hero.x, dy = hero.ty - hero.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 2){
+      const step = Math.min(d, WALK_SPEED * dt);
+      hero.x += dx / d * step; hero.y += dy / d * step;
+      if (layerFx) fxFootDust();            // bụi chân lúc chạy
+    } else if (hero.onArrive){
+      const f = hero.onArrive; hero.onArrive = null; f();
+    }
+    drawHero(d > 2);
+  }
+
+  let heroLayer = null;
+  function drawHero(moving){
+    if (!heroLayer || !heroLayer.isConnected){
+      const svg = $('#stage'); if (!svg) return;
+      heroLayer = E('g', { id:'hero' }, svg);
+    }
+    const bob = moving ? Math.sin(performance.now() / 70) * 4 : 0;
+    const lean = moving ? Math.sin(performance.now() / 70) * 6 : 0;
+    const carry = hero.carrying
+      ? `<g transform="translate(-20,-46)">${orgGlyph(hero.carrying, 40)}</g>
+         <ellipse cx="0" cy="-6" rx="16" ry="4" fill="rgba(58,46,36,.18)"/>`
+      : '';
+    heroLayer.innerHTML =
+      `<g transform="translate(${hero.x},${hero.y - 34 + bob})">
+         <ellipse cx="0" cy="36" rx="17" ry="5" fill="rgba(58,46,36,.2)"/>
+         <g transform="scale(${1.35 * hero.face},1.35) rotate(${lean})">
+           <g transform="translate(-23,-26)">${mamGlyph(mamStage, hero.carrying ? 'oh' : 'calm')}</g>
+         </g>
+         ${carry}
+       </g>`;
+  }
+
+  // đổi toạ độ chạm màn hình → toạ độ sân khấu
+  function stagePoint(e){
+    const svg = $('#stage');
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+    return { x: p.x, y: p.y };
+  }
+
+  // Mầm nhớ việc theo chuỗi: đang đi lấy máy mà được chỉ trạm thì lấy xong
+  // tự mang tới đặt luôn, không quên việc giữa chừng.
+  let wantOrg = null, wantPad = null;
+
+  /* Hoạt họa nhặt–bê–đặt: cái máy bay vòng cung, có nhún, có bụi.
+     Chỉ là lớp hình — mô phỏng vẫn đặt/gỡ đúng lúc hoạt họa chạm đất. */
+  function fxHop(orgId, from, to, dur, done){
+    const g = E('g', {}, layerFx);
+    const t0 = performance.now();
+    (function anim(now){
+      const t = Math.min(1, (now - t0) / dur);
+      const x = from.x + (to.x - from.x) * t;
+      const y = from.y + (to.y - from.y) * t - Math.sin(t * Math.PI) * 84;
+      const sq = t > 0.86 ? 1 + Math.sin((t - 0.86) / 0.14 * Math.PI) * 0.22 : 1;
+      g.innerHTML = `<g transform="translate(${x},${y}) scale(${sq},${2 - sq}) rotate(${(1 - t) * -14})">
+        <g transform="translate(-22,-22)">${orgGlyph(orgId, 44)}</g></g>`;
+      if (t < 1 && g.parentNode) requestAnimationFrame(anim);
+      else { g.remove(); fxDustRing(to.x, to.y + 6); if (done) done(); }
+    })(t0);
+  }
+  function fxDustRing(x, y){
+    for (let i = 0; i < 7; i++){
+      const c = E('circle', { r: 4 + (i % 3) * 2, fill: '#d9c48b' }, layerFx);
+      const a = (i / 7) * Math.PI * 2, t0 = performance.now();
+      (function anim(now){
+        const t = Math.min(1, (now - t0) / 420);
+        c.setAttribute('cx', x + Math.cos(a) * 34 * t);
+        c.setAttribute('cy', y + Math.sin(a) * 13 * t);
+        c.setAttribute('opacity', 1 - t);
+        if (t < 1 && c.parentNode) requestAnimationFrame(anim); else c.remove();
+      })(t0);
+    }
+  }
+  let lastDust = 0;
+  function fxFootDust(){
+    if (performance.now() - lastDust < 170) return;
+    lastDust = performance.now();
+    const c = E('circle', { cx: hero.x - hero.face * 12, cy: hero.y + 2, r: 5, fill: '#e2d2ae' }, layerFx);
+    const t0 = performance.now();
+    (function anim(now){
+      const t = Math.min(1, (now - t0) / 380);
+      c.setAttribute('r', 5 + t * 7);
+      c.setAttribute('opacity', 0.75 * (1 - t));
+      if (t < 1 && c.parentNode) requestAnimationFrame(anim); else c.remove();
+    })(t0);
+  }
+
+  function pickUp(id){
+    const s = SIM.snapshot(sim);
+    if (Object.values(s.pads).includes(id) || hero.carrying === id) return;
+    const chip = document.querySelector(`.chip[data-org="${id}"]`);
+    // Mầm chạy xuống mép khay (chiếu theo vị trí chip trên màn) rồi mới có máy trên đầu
+    let x = 640;
+    if (chip){
+      const r = chip.getBoundingClientRect();
+      const svg = $('#stage');
+      const p = new DOMPoint(r.x + r.width / 2, 0).matrixTransform(svg.getScreenCTM().inverse());
+      x = Math.min(1120, Math.max(140, p.x));
+    }
+    wantOrg = id; wantPad = null;
+    heroWalkTo(x, 528, () => {
+      // máy bay vòng cung từ mép khay lên đầu Mầm
+      fxHop(id, { x: hero.x, y: 648 }, { x: hero.x, y: hero.y - 58 }, 420, () => {
+        hero.carrying = id; wantOrg = null;
+        showInfo(id); refreshTray();
+        lastActionAt = performance.now();
+        if (wantPad){ const pd = wantPad; wantPad = null; padTapped(pd); }
+      });
+    });
+  }
+
+  function padTapped(pid){
+    const s = SIM.snapshot(sim);
+    const p = PAD_XY[pid];
+    if (s.pads[pid]){                       // có máy: tới gỡ về tay
+      heroWalkTo(p.x, p.y + 92, () => {
+        if (hero.carrying){ mamSay('Tay mình đang bận vác máy rồi, đặt cái này xuống đâu trước đã nhỉ?', 'oh'); return; }
+        const org = SIM.remove(sim, pid);
+        if (org){ hero.carrying = org; lastActionAt = performance.now(); refreshTray(); handleEvents(); render(); }
+      });
+    } else if (hero.carrying){              // trống + đang vác: tới nơi, máy nhảy từ đầu xuống trạm
+      heroWalkTo(p.x, p.y + 92, () => {
+        if (!hero.carrying) return;
+        const org = hero.carrying;
+        hero.carrying = null;
+        fxHop(org, { x: hero.x, y: hero.y - 58 }, { x: p.x, y: p.y }, 430, () => {
+          if (!SIM.place(sim, pid, org)){ hero.carrying = org; return; }
+          hideInfo();
+          lastActionAt = performance.now();
+          refreshTray(); handleEvents(); render();
+        });
+      });
+    } else if (wantOrg){                    // đang trên đường đi lấy máy: ghi nhớ trạm đích
+      wantPad = pid;
+    } else {
+      heroWalkTo(p.x, p.y + 92);            // trống + tay không: tới xem thôi
+    }
+  }
+
+  function heroAct(){                       // Enter: đặt/gỡ ở trạm gần nhất
+    let best = null, bd = 1e9;
+    for (const pid of SIM.PADS){
+      const p = PAD_XY[pid];
+      const d = Math.hypot(p.x - hero.x, p.y + 60 - hero.y);
+      if (d < bd){ bd = d; best = pid; }
+    }
+    if (best && bd < 130) padTapped(best);
+  }
+
+  function dropCarry(){                     // Esc: trả máy về khay
+    if (!hero.carrying) return;
+    hero.carrying = null; refreshTray(); hideInfo();
+  }
+
+  function removeStation(pid){ padTapped(pid); }
+
+  /* ---------- vòng lặp ---------- */
+  let doneTimer = null;      // hẹn giờ mở bảng lý thuyết — huỷ khi dẹp sàn / về bản đồ
+  let lastActionAt = 0;      // lần cuối người chơi thao tác, để biết khi nào bác cần gỡ bí
+  let acc = 0;   // bộ tích luỹ: phần dư mỗi khung được giữ lại, tốc độ sim
+                 // không phụ thuộc tần số quét màn hình (60/90/144Hz như nhau)
+  function loop(ts){
+    raf = requestAnimationFrame(loop);
+    if (!auto){ return; }
+    if (!lastTs) lastTs = ts;
+    const uiDt = Math.min(0.1, (ts - lastTs) / 1000);
+    acc += uiDt;
+    lastTs = ts;
+    const n = Math.floor(acc / SIM.SUB);
+    if (n > 0){
+      acc -= n * SIM.SUB;
+      SIM.step(sim, n * SIM.SUB);
+      handleEvents(); render(); checkStuck();
+    }
+    // nhân vật là lớp hình, đi theo đồng hồ màn hình, không đụng vào sim
+    if ($('#scr-play').classList.contains('on')) heroTick(uiDt);
+    if ($('#scr-map').classList.contains('on')) gardenTick(uiDt);
+  }
+
+  /* ---------- điều hướng & nút ---------- */
+  let everStarted = false;
+  const SCREENS = ['scr-topic', 'scr-map', 'scr-play'];
+  function showScreen(id){
+    for (const sid of SCREENS) $('#' + sid).classList.toggle('on', sid === id);
+  }
+  function goTopic(){ showScreen('scr-topic'); renderTopics(); }  // vẽ lại thẻ — xoá trạng thái mờ của thẻ vừa bấm
+
+  /* ── Kho câu hỏi: 4 môn, thẻ nào có game thì vào được ── */
+  const TOPICS = [
+    { mon:'Sinh học', hoi:'Làm sao tế bào biết phải làm việc gì?', lop:'Sinh học 10', game:true },
+    { mon:'Sinh học', hoi:'Cây ăn gì để sống?',                    lop:'Sinh học 11' },
+    { mon:'Sinh học', hoi:'Vì sao tim đập cả đời không nghỉ?',      lop:'Sinh học 8' },
+    { mon:'Sinh học', hoi:'Vi khuẩn bé cỡ nào mà làm mình ốm?',     lop:'Sinh học 10' },
+    { mon:'Vật lý',   hoi:'Điện trong nhà chạy từ đâu tới?',        lop:'KHTN 8' },
+    { mon:'Vật lý',   hoi:'Nam châm hút được những thứ gì?',        lop:'KHTN 7' },
+    { mon:'Vật lý',   hoi:'Cầu vồng từ đâu ra?',                    lop:'KHTN 9' },
+    { mon:'Hóa học',  hoi:'Muối tan đi đâu trong cốc nước?',        lop:'KHTN 8' },
+    { mon:'Hóa học',  hoi:'Lửa ăn gì mà cháy mãi?',                 lop:'KHTN 8' },
+    { mon:'Địa lý',   hoi:'Núi lửa phun vì cái gì?',                lop:'Địa lý 10' },
+    { mon:'Địa lý',   hoi:'Mưa từ đâu rơi xuống?',                  lop:'Địa lý 6' }
+  ];
+  // mỗi môn một bộ đồ cho Mầm + một màu nền
+  const MON_KIT = {
+    'Sinh học': { bg:'#2f7f55', ghost:'SINH HỌC', do:'blouse' },
+    'Vật lý'  : { bg:'#2b62a8', ghost:'VẬT LÝ',   do:'mubaoho' },
+    'Hóa học' : { bg:'#a53c73', ghost:'HÓA HỌC',  do:'kinhbaoho' },
+    'Địa lý'  : { bg:'#a85717', ghost:'ĐỊA LÝ',   do:'muco' }
+  };
+
+  /* Mầm cỡ lớn cho màn chọn — có thân người, đổi trang phục theo môn.
+     Vẽ trong hộp 100×160, giữ đúng nét paper-craft của Mầm nhỏ trong game. */
+  // Trang phục tách hai lớp: `than` vẽ TRƯỚC đầu, `dau` vẽ SAU đầu
+  // (nếu vẽ mũ/kính trước thì đầu Mầm sẽ che mất).
+  const OUTFIT = {
+    blouse: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#fdfbf4" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M50 104v38" stroke="#12324f" stroke-width="2.6"/>' +
+            '<rect x="59" y="116" width="14" height="11" rx="2.6" fill="#cfe7ee" stroke="#12324f" stroke-width="2.6"/>',
+      dau: ''
+    },
+    mubaoho: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#ffd97a" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M32 108h36v7H32Z" fill="#e8a13c" stroke="#12324f" stroke-width="2.6"/>',
+      dau: '<path d="M20 62q30-30 60 0l-5 8H25Z" fill="#f2b722" stroke="#12324f" stroke-width="3.4"/>' +
+           '<rect x="14" y="62" width="72" height="9" rx="4.5" fill="#f2b722" stroke="#12324f" stroke-width="3.2"/>' +
+           '<path d="M50 34v10" stroke="#12324f" stroke-width="3" stroke-linecap="round"/>'
+    },
+    kinhbaoho: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#fdfbf4" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M38 100h24v8H38Z" fill="#bfe8f5" stroke="#12324f" stroke-width="2.6"/>',
+      dau: '<rect x="24" y="56" width="52" height="21" rx="10" fill="#bfe8f5" opacity=".82" stroke="#12324f" stroke-width="3.2"/>' +
+           '<path d="M24 66h-7M76 66h7" stroke="#12324f" stroke-width="3.2" stroke-linecap="round"/>' +
+           '<path d="M50 56v21" stroke="#12324f" stroke-width="2.4" opacity=".5"/>'
+    },
+    muco: {
+      than: '<path d="M28 96h44l7 46H21Z" fill="#e8dcc0" stroke="#12324f" stroke-width="3.4"/>' +
+            '<path d="M34 112h32v6H34Z" fill="#c9a86a" stroke="#12324f" stroke-width="2.6"/>',
+      dau: '<ellipse cx="50" cy="52" rx="42" ry="12" fill="#e3c98d" stroke="#12324f" stroke-width="3.4"/>' +
+           '<path d="M28 52q6-26 22-26t22 26Z" fill="#eed9a6" stroke="#12324f" stroke-width="3.4"/>' +
+           '<path d="M28 48h44" stroke="#c9a86a" stroke-width="3.4"/>'
+    }
+  };
+
+  function mamBig(kit){
+    const o = OUTFIT[kit.do];
+    return '<svg viewBox="0 0 100 160" aria-hidden="true">' +
+      '<ellipse cx="50" cy="152" rx="30" ry="7" fill="rgba(20,14,8,.22)"/>' +
+      '<path d="M44 132h5v20h-5ZM53 132h5v20h-5Z" fill="#4a6b86" stroke="#12324f" stroke-width="3"/>' +
+      '<path d="M35 147h18v7H35ZM48 147h18v7H48Z" fill="#2a4a63" stroke="#12324f" stroke-width="3"/>' +
+      o.than +
+      '<path d="M28 100q-11 12-9 27" fill="none" stroke="#12324f" stroke-width="3.4" stroke-linecap="round"/>' +
+      '<path d="M72 100q11 12 9 27" fill="none" stroke="#12324f" stroke-width="3.4" stroke-linecap="round"/>' +
+      '<path d="M50 40q-19-2-23-17 17-6 23 8Z" fill="#7ec96a" stroke="#1d5a2e" stroke-width="3"/>' +
+      '<path d="M50 40q19-2 23-17-17-6-23 8Z" fill="#7ec96a" stroke="#1d5a2e" stroke-width="3"/>' +
+      '<circle cx="50" cy="70" r="31" fill="#4a9df0" stroke="#12324f" stroke-width="3.6"/>' +
+      '<ellipse cx="50" cy="72" rx="22" ry="23" fill="#fdfbf4" stroke="#12324f" stroke-width="3"/>' +
+      '<circle cx="40" cy="68" r="10" fill="none" stroke="#12324f" stroke-width="2.8"/>' +
+      '<circle cx="60" cy="68" r="10" fill="none" stroke="#12324f" stroke-width="2.8"/>' +
+      '<circle cx="40" cy="68" r="4.4" fill="#12324f"/><circle cx="60" cy="68" r="4.4" fill="#12324f"/>' +
+      '<path d="M42 85q8 8 16 0q-8 5-16 0Z" fill="#e8657f" stroke="#12324f" stroke-width="2.6"/>' +
+      '<path d="M38 96l12 12 12-12q-12 6-24 0Z" fill="#e4453c" stroke="#12324f" stroke-width="2.8"/>' +
+      o.dau +
+      '</svg>';
+  }
+
+  let curMon = 'Tất cả', heroIdx = 0, heroBusy = false;
+  const heroList = () => TOPICS.map((t, i) => ({ ...t, i }))
+    .filter(t => curMon === 'Tất cả' || t.mon === curMon);
+
+  function pickSubject(mon){ curMon = mon; heroIdx = 0; renderTopics(); }
+
+  function heroNav(dir){
+    if (heroBusy) return;
+    const n = heroList().length;
+    if (n < 2) return;
+    heroBusy = true;
+    heroIdx = (heroIdx + (dir === 'next' ? 1 : n - 1)) % n;
+    paintHero();
+    setTimeout(function(){ heroBusy = false; }, 660);
+  }
+  function heroJump(k){ if (heroBusy || k === heroIdx) return; heroIdx = k; paintHero(); }
+
+  function renderTopics(){
+    const list = heroList();
+    const subs = ['Tất cả'].concat([...new Set(TOPICS.map(t => t.mon))]);
+    $('#hero-subs').innerHTML = subs.map(m =>
+      '<button type="button" aria-pressed="' + (m === curMon) + '" onclick="UI.pickSubject(\'' + m + '\')">' + m + '</button>'
+    ).join('');
+    $('#hero-stage').innerHTML = list.map((t, k) =>
+      '<div class="figure" data-k="' + k + '">' + mamBig(MON_KIT[t.mon]) + '</div>').join('');
+    $('#hero-strip').innerHTML = list.map((t, k) =>
+      '<button type="button" role="tab" aria-current="' + (k === heroIdx) + '"' +
+      ' aria-label="' + t.hoi + (t.game ? '' : ' — chưa mở') + '" onclick="UI.heroJump(' + k + ')">' +
+      mamBig(MON_KIT[t.mon]) + '<small>' + (t.game ? t.mon : '🔒 ' + t.mon) + '</small></button>').join('');
+    paintHero();
+  }
+
+  function paintHero(){
+    const list = heroList();
+    if (!list.length) return;
+    const n = list.length;
+    if (heroIdx >= n) heroIdx = 0;
+    const cur = list[heroIdx], kit = MON_KIT[cur.mon];
+    $('#scr-topic').style.setProperty('--hero-bg', kit.bg);
+    $('#hero-ghost').textContent = kit.ghost;
+    $('#hero-mon').textContent = cur.mon;
+    $('#hero-hoi').textContent = cur.hoi;
+    $('#hero-lop').textContent = cur.lop;
+    $('#hero-lock').textContent = cur.game ? '' : 'Bài này chưa mở — chọn câu khác nhé';
+    const go = $('#hero-go');
+    go.disabled = !cur.game;
+    $('#hero-go-txt').textContent = cur.game ? 'Đi thôi' : 'Chưa mở';
+    go.onclick = cur.game ? function(){ goGarden(); } : null;
+    const L = (heroIdx + n - 1) % n, R = (heroIdx + 1) % n, B = (heroIdx + 2) % n;
+    document.querySelectorAll('#hero-stage .figure').forEach(function(el){
+      const k = +el.dataset.k;
+      const role = k === heroIdx ? 'center' : k === L ? 'side left' : k === R ? 'side right' : 'back';
+      el.className = 'figure ' + role;
+      const shown = (k === heroIdx || k === L || k === R || (n > 3 && k === B));
+      el.style.opacity = shown ? '' : '0';
+      el.style.visibility = shown ? '' : 'hidden';
+    });
+    const btns = document.querySelectorAll('#hero-strip button');
+    btns.forEach(function(b, k){ b.setAttribute('aria-current', k === heroIdx); });
+    if (btns[heroIdx]) btns[heroIdx].scrollIntoView({ block:'nearest', inline:'center', behavior:'smooth' });
+  }
+
+  /* khu vườn: Mầm đi bộ tới nhà bài học */
+  const gHero = { x: 440, y: 340, tx: 440, ty: 340, face: 1, onArrive: null };
+  const LAB_DOOR = { x: 255, y: 418 };
+  function goGarden(){
+    SIM.setRun(sim, false); syncRunBtn();
+    showScreen('scr-map');
+    drawMapTree();
+  }
+  const goMap = goGarden;
+  function gardenWalkTo(x, y, onArrive){
+    gHero.tx = Math.min(830, Math.max(60, x));
+    gHero.ty = Math.min(525, Math.max(110, y));
+    gHero.onArrive = onArrive || null;
+    if (gHero.tx !== gHero.x) gHero.face = gHero.tx > gHero.x ? 1 : -1;
+  }
+  function gardenGo(which){
+    if (which === 'lab') gardenWalkTo(LAB_DOOR.x, LAB_DOOR.y, () => goPlay());
+  }
+  function gardenTick(dt){
+    let kx = 0, ky = 0;
+    if (keys.has('ArrowLeft')) kx -= 1;
+    if (keys.has('ArrowRight')) kx += 1;
+    if (keys.has('ArrowUp')) ky -= 1;
+    if (keys.has('ArrowDown')) ky += 1;
+    if (kx || ky){
+      const l = Math.hypot(kx, ky);
+      gHero.tx = Math.min(830, Math.max(60, gHero.x + kx / l * 300 * dt));
+      gHero.ty = Math.min(525, Math.max(110, gHero.y + ky / l * 300 * dt));
+      gHero.onArrive = null;
+      if (kx) gHero.face = kx > 0 ? 1 : -1;
+    }
+    const dx = gHero.tx - gHero.x, dy = gHero.ty - gHero.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 2){
+      const step = Math.min(d, 300 * dt);
+      gHero.x += dx / d * step; gHero.y += dy / d * step;
+    } else if (gHero.onArrive){
+      const f = gHero.onArrive; gHero.onArrive = null; f();
+    }
+    // đi bộ tới sát cửa nhà mở là vào bài (kể cả đi bằng phím)
+    if (Math.hypot(gHero.x - LAB_DOOR.x, gHero.y - LAB_DOOR.y) < 34) { gHero.x = 440; gHero.y = 340; gHero.tx = 440; gHero.ty = 340; goPlay(); return; }
+    const gl = $('#gardenHero');
+    if (gl){
+      const bob = d > 2 ? Math.sin(performance.now() / 70) * 3.5 : 0;
+      gl.innerHTML =
+        `<g transform="translate(${gHero.x},${gHero.y + bob})">
+           <ellipse cx="0" cy="26" rx="15" ry="4.5" fill="rgba(58,46,36,.2)"/>
+           <g transform="scale(${1.5 * gHero.face},1.5)"><g transform="translate(-23,-26)">${mamGlyph(mamStage, 'calm')}</g></g>
+         </g>`;
+    }
+  }
+
+  function goPlay(){
+    showScreen('scr-play');
+    // giữ nguyên ca đang dở khi đảo qua vườn; chỉ dọn khi ca đã xong hoặc lần đầu
+    if (!everStarted || sim.done) resetShift();
+    everStarted = true;
+  }
+  function resetShift(){
+    if (doneTimer){ clearTimeout(doneTimer); doneTimer = null; }
+    sim = SIM.create();
+    saidOnce.clear(); picked = null; playT0 = performance.now();
+    lastActionAt = performance.now(); lastPadsKey = '__init__';
+    closeDone();
+    hero.carrying = null; wantOrg = null; wantPad = null; hero.x = hero.tx = 640; hero.y = hero.ty = 528; hero.onArrive = null;
+    heroLayer = null;
+    buildScene(); buildTray(); hideInfo(); syncRunBtn(); render(); drawHero(false);
+    speak('Hôm nay xưởng phải giao 8 kiện hàng mà máy móc chưa đặt gì cả. Cậu kéo máy vào mấy cái trạm kia giúp tôi.');
+    mamSay('Mình cũng mới vô làm hôm nay, chưa biết gì đâu. Hai đứa mình mò chung nha!', 'calm');
+    drawMam('calm');
+  }
+  function syncRunBtn(){
+    $('#btnRun').textContent = sim.running ? '⏸ Dừng băng chuyền' : '▶ Cho băng chuyền chạy';
+  }
+  function toggleRun(){
+    // Sau khi đủ đơn vẫn cho bật/tắt để người học tạm dừng mà đọc — đơn không đếm lố
+    // nữa nên không sợ hiện "13/8".
+    SIM.setRun(sim, !sim.running);
+    lastActionAt = performance.now();
+    if (sim.running && !sim.done){
+      speak('Băng chuyền chạy rồi. Nhìn tờ bản thiết kế đầu tiên bò ra từ cái phòng bên kia.', 'run1');
+      mamSay('Mình đứng đây coi cùng bạn. Có gì lạ mình kêu nha.', 'calm', 'run1');
+    }
+    syncRunBtn();
+  }
+  // Đủ đơn: KHÔNG bật popup. Mở bảng lý thuyết ngay cạnh dây chuyền, và
+  // dây chuyền vẫn chạy để người học vừa đọc vừa nhìn nó làm.
+  function showDone(){
+    doneTimer = null;
+    const secs = Math.round(sim.runT);      // giờ lấy từ sim, không phải đồng hồ tường
+    $('#thTime').textContent = secs >= 60 ? Math.round(secs/60) + ' phút' : secs + ' giây';
+    if (mamStage < 5) mamStage += 1;        // xong một chặng thì mầm ra thêm một lá
+    $('#thStage').textContent = MAM_STAGE_NAME[mamStage];
+    drawMam('yay');
+    $('#mamFaceTheory').innerHTML = mamGlyph(mamStage, 'yay');
+    $('#mamGrowIcon').innerHTML  = mamGlyph(mamStage, 'yay');
+    speak('Đủ đơn rồi, cảm ơn cậu. Băng chuyền tôi để chạy tiếp cho cậu coi — đọc cái bảng bên phải nhé.');
+    mamSay('Đủ 8 kiện rồi! Bạn đọc bảng bên cạnh đi, mình ngồi coi băng chuyền chạy tiếp.', 'yay');
+    $('#scr-play').classList.add('done-mode');
+    $('#theory').scrollTop = 0;
+    syncRunBtn();
+  }
+  function closeDone(){ $('#scr-play').classList.remove('done-mode'); }
+  function replay(){ closeDone(); resetShift(); }
+  function doneToMap(){ closeDone(); goMap(); }
+
+  /* ---------- hooks review (giữ vĩnh viễn, contract) ---------- */
+  window.__step = secs => { auto = false; SIM.step(sim, secs); handleEvents(); render(); };
+  window.__place = (pad, org) => { const ok = SIM.place(sim, pad, org); handleEvents(); refreshTray(); render(); return ok; };
+  window.__remove = pad => { const org = SIM.remove(sim, pad); handleEvents(); refreshTray(); render(); return org; };
+  window.__setRun = on => { SIM.setRun(sim, on); syncRunBtn(); };
+  window.__state = () => ({
+    screen: $('#scr-topic').classList.contains('on') ? 'topic'
+          : $('#scr-map').classList.contains('on') ? 'map'
+          : ($('#scr-play').classList.contains('done-mode') ? 'done' : 'play'),
+    mamStage,
+    carrying: hero.carrying, wantOrg, wantPad,
+    ...SIM.snapshot(sim)
+  });
+  window.__goScreen = name => {
+    if (name === 'play') goPlay();
+    else if (name === 'map' || name === 'garden'){ closeDone(); goGarden(); }
+    else if (name === 'topic') goTopic();
+    else if (name === 'done') showDone();
+  };
+  window.__screenPos = id => {
+    const svg = $('#stage');
+    const pt = PAD_XY[id] || (id === 'NUC' ? NODES[0] : id === 'DOOR' ? NODES[5] : null);
+    if (!pt) return null;
+    const m = svg.getScreenCTM();
+    const p = new DOMPoint(pt.x, pt.y).matrixTransform(m);
+    return { x: p.x, y: p.y };
+  };
+  window.__sim = () => sim;   // cho probe sâu
+
+  /* ---------- khởi động ---------- */
+  $('#hero-prev').addEventListener('click', () => heroNav('prev'));
+  $('#hero-next').addEventListener('click', () => heroNav('next'));
+  $('#btnRun').addEventListener('click', toggleRun);
+  $('#btnReset').addEventListener('click', resetShift);
+  // Phím điều khiển: mũi tên đi, Enter đặt/gỡ, 1-7 lấy máy, Esc trả máy
+  const KEY_ORDER = Object.keys(SIM.ORGS);
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape'){ dropCarry(); hideInfo(); return; }
+    if ($('#scr-topic').classList.contains('on')){
+      if (e.key === 'ArrowLeft'){ heroNav('prev'); e.preventDefault(); }
+      if (e.key === 'ArrowRight'){ heroNav('next'); e.preventDefault(); }
+      return;
+    }
+    const playOn = $('#scr-play').classList.contains('on');
+    const mapOn = $('#scr-map').classList.contains('on');
+    if (e.key.startsWith('Arrow') && (playOn || mapOn)){ keys.add(e.key); e.preventDefault(); return; }
+    if (!playOn) return;
+    if (e.key === 'Enter') heroAct();
+    const num = parseInt(e.key, 10);
+    if (num >= 1 && num <= KEY_ORDER.length) pickUp(KEY_ORDER[num - 1]);
+  });
+  window.addEventListener('keyup', e => keys.delete(e.key));
+  // chạm sàn trống → Mầm đi tới đó
+  $('#stage').addEventListener('click', e => {
+    if (e.target.closest('.pad-hit') || e.target.closest('.stgroup')) return;
+    const p = stagePoint(e);
+    if (p.x > 70 && p.x < 1210 && p.y > 60 && p.y < 625) heroWalkTo(p.x, p.y);
+  });
+  // chạm đất trong vườn → Mầm đi tới đó
+  $('#garden').addEventListener('click', e => {
+    if (e.target.closest('.plot')) return;
+    const svg = $('#garden');
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+    if (p.x > 40 && p.x < 850 && p.y > 90 && p.y < 545) gardenWalkTo(p.x, p.y);
+  });
+  buildScene(); buildTray(); drawMam('calm'); drawMapTree(); renderTopics();
+  raf = requestAnimationFrame(loop);
+
+  return { goPlay, goMap, goTopic, goGarden, gardenGo, pickSubject, heroNav, heroJump, replay, doneToMap, hideInfo };
+})();
+</script>
+</body>
+</html>
