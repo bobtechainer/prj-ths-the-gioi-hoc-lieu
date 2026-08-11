@@ -14,12 +14,10 @@ const { chromium } = require(path.join('c:/Trường học số - source code/pr
   await pg.waitForTimeout(350);
   await shot('1-topic');
 
-  // ① lọc môn rồi chọn thẻ có game mẫu
-  await pg.click('.subchip:nth-child(2)');            // Sinh học
-  await pg.waitForTimeout(200);
-  await shot('2-topic-sinh');
-  await pg.click('.tcard');
-  await pg.waitForTimeout(500);
+  // ① thẻ đầu carousel là Sinh (có game) — bấm Đi thôi
+  await pg.click('#hero-go');
+  await pg.waitForFunction(() => window.__state().screen === 'map', null, { timeout: 6000 });
+  await pg.waitForTimeout(400);
   await shot('4-garden');
 
   // ③ chạm đất để Mầm đi, rồi chạm nhà bài học

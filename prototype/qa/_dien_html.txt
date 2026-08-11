@@ -1,0 +1,104 @@
+<!-- ════════ 3 · TRẠM ĐIỆN KHU PHỐ ════════ -->
+<section id="scr-dien" class="screen">
+  <div class="topbar">
+    <button class="btn ghost" onclick="UI.goGarden()">← Khu vườn</button>
+    <h1 class="stick" style="transform:rotate(-1deg)">🔌 Trạm điện khu phố</h1>
+    <div class="sp"></div>
+    <div class="tally" title="Số nhà đang có điện">
+      <span style="font-weight:700;font-size:13px;color:var(--muted)">NHÀ SÁNG</span>
+      <div class="crates" id="dcrates"></div>
+      <b id="dlit">0/6</b>
+    </div>
+    <button class="btn warn" id="dbtnReset">Ca mới</button>
+  </div>
+
+  <div class="stagebox">
+   <div class="stagewrap">
+    <div class="foreman">
+      <svg class="face" width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="30" r="17" fill="#ffd9b0" stroke="#3a2e24" stroke-width="3"/>
+        <path d="M8 24q1-14 18-14t18 14l-3 3H11Z" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+        <rect x="21" y="6" width="10" height="8" rx="3" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+        <circle cx="20" cy="30" r="2.4" fill="#3a2e24"/><circle cx="32" cy="30" r="2.4" fill="#3a2e24"/>
+        <path d="M14 40q4 5 11 5" stroke="#3a2e24" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="bubble" id="dbubble"><span class="who">BÁC THỢ ĐIỆN</span><span id="dbubbleTxt">…</span></div>
+    </div>
+
+    <div class="mam">
+      <svg class="face" id="dmamFace" width="46" height="52" viewBox="0 0 46 52"></svg>
+      <div class="bubble quiet" id="dmamBubble"><span class="who">MẦM</span><span id="dmamTxt"></span></div>
+    </div>
+
+    <svg id="dstage" viewBox="0 0 1280 660" preserveAspectRatio="xMidYMid meet" aria-label="Khu phố mất điện"></svg>
+   </div>
+
+   <aside id="theory2">
+     <div class="hd">
+       <span class="stamp">✓ Cả phố sáng đèn</span>
+       <h3>Vừa rồi là chuyện gì</h3>
+     </div>
+     <p style="color:var(--muted);font-size:13.5px;margin-bottom:12px">
+       Khu phố bên cạnh vẫn đang sáng đèn — bạn vừa đọc vừa ngắm thành quả nhé.
+       Đã đo thử <b id="th2Probe">—</b> lần, thay <b id="th2Swap">—</b> món đồ.
+     </p>
+
+     <div class="who2">
+       <svg width="34" height="34" viewBox="0 0 52 52">
+         <circle cx="26" cy="30" r="17" fill="#ffd9b0" stroke="#3a2e24" stroke-width="3"/>
+         <path d="M8 24q1-14 18-14t18 14l-3 3H11Z" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+         <circle cx="20" cy="30" r="2.4" fill="#3a2e24"/><circle cx="32" cy="30" r="2.4" fill="#3a2e24"/>
+         <path d="M15 38q6 7 16 3" stroke="#3a2e24" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+       </svg>
+       <p><b>BÁC THỢ ĐIỆN</b><span id="th2Debrief">Điện không tự mất — nó chỉ dừng ở chỗ đường dây bị đứt.
+       Cứ lấy bút thử đo dọc đường dây, chỗ nào trước có sau mất là bệnh nằm ngay giữa hai điểm đó.</span></p>
+     </div>
+
+     <h4>Đường đi của dòng điện</h4>
+     <div class="chain">
+       <div><span class="n">1</span><span class="j">Trạm biến áp đầu phố</span><span class="s">nguồn điện</span></div>
+       <div><span class="n">2</span><span class="j">Cầu dao tổng</span><span class="s">công tắc cả phố</span></div>
+       <div><span class="n">3</span><span class="j">Cầu dao nhánh</span><span class="s">công tắc từng dãy nhà</span></div>
+       <div><span class="n">4</span><span class="j">Hộp cầu chì</span><span class="s">chốt bảo vệ — quá tải là tự đứt</span></div>
+       <div><span class="n">5</span><span class="j">Mối nối dây</span><span class="s">chỗ hay đứt ngầm nhất</span></div>
+       <div style="background:#fff8e0"><span class="n">6</span><span class="j">Bóng đèn trong nhà</span><span class="s">rồi vòng về nguồn — thành mạch kín</span></div>
+     </div>
+     <p style="font-size:14px">Muốn đèn sáng thì dòng điện phải đi được <b>trọn một vòng</b>.
+     Đứt ở bất kỳ đâu — dù chỉ một mối nối bé — là cả đoạn sau tối om.</p>
+
+     <h4>Trong sách viết thế nào</h4>
+     <div class="quote">
+       <p>… Dòng điện chỉ chạy trong <mark>mạch kín</mark>. <mark>Cầu chì</mark> là bộ phận bảo vệ mạch:
+       khi dòng điện vượt mức cho phép, dây chì nóng chảy và tự đứt để ngắt mạch.
+       Trước khi sửa chữa thiết bị điện, phải <mark>ngắt nguồn điện</mark> để bảo đảm an toàn …</p>
+       <p class="cite">Khoa học tự nhiên 8 — Bài Mạch điện, trang 98</p>
+     </div>
+
+     <div class="who2 mamrow" style="margin-top:12px">
+       <svg width="34" height="38" viewBox="0 0 46 52" id="dmamFaceTheory"></svg>
+       <p><b>MẦM</b><span id="th2Mam">À, hoá ra phải ngắt cầu dao rồi mới được đụng vào dây.
+       Hồi nãy mình quên, tê hết cả tay. Nhớ đời luôn.</span></p>
+     </div>
+
+     <div class="grow">
+       <svg width="30" height="34" viewBox="0 0 46 52" id="dmamGrowIcon"></svg>
+       <span>Mầm ra thêm một lá — giờ đang ở mức <b id="th2Stage">ba lá</b>.</span>
+     </div>
+
+     <div class="acts2">
+       <button class="btn" onclick="UI.dReplay()">Ca mới (bệnh khác)</button>
+       <button class="btn go" onclick="UI.dToMap()">Về khu vườn →</button>
+     </div>
+   </aside>
+  </div>
+
+  <div class="shelf">
+    <div class="infocard" id="dinfocard">
+      <button class="x" onclick="UI.dHideInfo()">✕</button>
+      <div class="nm" id="dic-nm"></div>
+      <div class="what" id="dic-what"></div>
+      <div class="warnrow" id="dic-warn" style="display:none"></div>
+    </div>
+    <div class="board" id="dboard"></div>
+  </div>
+</section>

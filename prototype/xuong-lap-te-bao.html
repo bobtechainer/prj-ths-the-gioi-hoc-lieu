@@ -193,6 +193,10 @@
     #hero-arrows button{width:50px;height:50px}
     #hero-brand{top:18px}
   }
+  /* nút lui/tiến nổi trên khu vườn — màn nào cũng phải có đường ra */
+  .gnav{position:absolute;top:12px;left:14px;right:14px;display:flex;flex-wrap:nowrap;gap:10px;z-index:6;pointer-events:none}
+  .gnav .btn{pointer-events:auto}
+  .gnav .sp{flex:1}
   /* ───── 1 · KHU VƯỜN ───── */
   #scr-map .wrap{flex:1;display:grid;place-items:center;padding:14px;min-height:0}
   #scr-map svg{width:min(96vw,980px);max-height:92vh;border-radius:22px;border:4px solid var(--ink);
@@ -337,6 +341,55 @@
     filter:drop-shadow(0 8px 12px rgba(90,70,40,.35))}
 
   /* ───── 3 · CHỐT CHẶNG ───── */
+  /* ───── 3 · TRẠM ĐIỆN KHU PHỐ ───── */
+  #scr-dien{gap:8px;padding:10px 12px 12px}
+  #scr-dien .stagebox{flex:1;min-height:0;display:flex;gap:10px;position:relative}
+  #dstage{width:100%;height:100%;max-width:1500px}
+  .dhouse-win{transition:fill .45s}
+  .dwire{fill:none;stroke:#8b98a6;stroke-width:6;stroke-linecap:round}
+  .dwire.live{stroke:#f2b722}
+  .dwire{transition:stroke .45s}
+  .dswitch{cursor:pointer}
+  .dcomp{cursor:pointer}
+  .dtp{cursor:pointer;opacity:0;transition:opacity .25s}
+  body.probing .dtp{opacity:1}
+  @keyframes zapshake{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
+  .zapping{animation:zapshake .4s ease}
+  /* bảng lý thuyết của trạm điện — hiện tại chỗ, phố vẫn sáng đèn bên cạnh */
+  #theory2{
+    display:none;flex:none;width:378px;overflow-y:auto;
+    background:var(--card);border:3px solid var(--ink);border-radius:16px;
+    box-shadow:var(--sh);padding:14px 16px 16px;
+  }
+  #scr-dien.done-mode #theory2{display:block;animation:slidein .35s ease}
+  #scr-dien.done-mode .shelf{display:none}
+  #theory2 .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  #theory2 .hd h3{margin:0;font-size:18px;color:var(--ink)}
+  #theory2 .stamp{background:var(--gold);color:#3a2e24;border:2.5px solid var(--ink);border-radius:9px;padding:2px 9px;font-size:12.5px;font-weight:800}
+  #theory2 h4{margin:14px 0 6px;font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  #theory2 p{margin:0 0 8px;font-size:14.5px;line-height:1.6}
+  #theory2 .chain{display:flex;flex-direction:column;gap:5px;margin:0 0 10px}
+  #theory2 .chain div{display:flex;align-items:baseline;gap:7px;font-size:13.5px;padding:6px 9px;border-radius:9px;background:#f6f1e4}
+  #theory2 .chain span.n{font-weight:800;color:#7a6a52;min-width:15px}
+  #theory2 .chain span.j{font-weight:700}
+  #theory2 .chain span.s{font-style:italic;color:var(--muted);font-size:12.5px}
+  #theory2 .quote{border:2.5px solid var(--ink);border-radius:12px;padding:11px 13px;background:#fdfaf1}
+  #theory2 .quote p{font-size:14px}
+  #theory2 .quote mark{background:#ffe9a8;padding:0 3px;border-radius:4px;font-weight:700}
+  #theory2 .cite{font-size:12px;color:var(--muted);font-weight:600;margin:0}
+  #theory2 .who2{display:flex;gap:9px;align-items:flex-start;background:#fff8ec;border:2.5px solid var(--ink);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+  #theory2 .who2.mamrow{background:#eef6ff;border-color:#2f6fbf}
+  #theory2 .who2 svg{flex:none}
+  #theory2 .who2 p{margin:0;font-size:14px}
+  #theory2 .who2 b{display:block;font-size:11.5px;letter-spacing:.04em;color:#a2792a;margin-bottom:1px}
+  #theory2 .who2.mamrow b{color:#2f6fbf}
+  #theory2 .grow{display:flex;align-items:center;gap:10px;background:#eef9f1;border:2.5px solid var(--green);border-radius:12px;padding:10px 12px;margin:12px 0 0;font-size:13.5px;font-weight:600}
+  #theory2 .acts2{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  #theory2 .acts2 .btn{flex:1;min-width:120px;text-align:center}
+  @media (max-width:760px){
+    #scr-dien .stagebox{flex-direction:column}
+    #theory2{width:auto;max-height:50vh}
+  }
   body.dragging #infocard{display:none!important}  /* thẻ thông tin không được che pad lúc kéo */
   @media (max-width:760px){
     .topbar h1{font-size:15px}
@@ -394,7 +447,7 @@
   <div class="gnav">
     <button class="btn" onclick="UI.goTopic()">← Chọn chuyện khác</button>
     <div class="sp"></div>
-    <button class="btn go" onclick="UI.gardenGo('lab')">Vào Xưởng lắp tế bào →</button>
+    <button class="btn go" id="gnav-go" onclick="UI.gardenGo(chonGame)">Vào Xưởng lắp tế bào →</button>
   </div>
   <div class="wrap">
     <svg id="garden" viewBox="0 0 880 560" aria-label="Khu vườn của Mầm">
@@ -458,11 +511,23 @@
         <text class="maplbl" x="672" y="426" text-anchor="middle" font-size="16">Vườn quang hợp</text>
         <text class="mapsub" x="672" y="444" text-anchor="middle">Chưa mở</text>
       </g>
-      <g opacity=".55">
-        <ellipse cx="452" cy="516" rx="52" ry="12" fill="rgba(58,46,36,.14)"/>
-        <rect x="412" y="462" width="80" height="54" rx="9" fill="#efe7d4" stroke="#3a2e24" stroke-width="3.5"/>
-        <path d="M406 470q46-30 92 0v11h-92Z" fill="#c9bda3" stroke="#3a2e24" stroke-width="3.5"/>
-        <text class="maplbl" x="452" y="548" text-anchor="middle" font-size="16">Phòng tiêu bản</text>
+      <g class="plot" tabindex="0" role="button" aria-label="Vào bài Trạm điện khu phố" onclick="UI.gardenGo('dien')"
+         onkeydown="if(event.key==='Enter'){event.preventDefault();UI.gardenGo('dien')}">
+        <ellipse class="ring" cx="452" cy="464" rx="86" ry="50" fill="rgba(255,255,255,.55)" opacity="0" style="transition:opacity .2s"/>
+        <ellipse cx="452" cy="492" rx="58" ry="12" fill="rgba(58,46,36,.15)"/>
+        <rect x="408" y="428" width="88" height="64" rx="9" fill="#fffdf6" stroke="#3a2e24" stroke-width="4"/>
+        <path d="M400 436q52-34 104 0v12H400Z" fill="#3a7fd0" stroke="#3a2e24" stroke-width="4"/>
+        <rect x="438" y="454" width="26" height="38" rx="5" fill="#f0862c" stroke="#3a2e24" stroke-width="3"/>
+        <path d="M424 446l-6 10h7l-6 10" stroke="#f2b722" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <path d="M486 446l-6 10h7l-6 10" stroke="#f2b722" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <rect x="500" y="386" width="9" height="102" fill="#a4703d" stroke="#3a2e24" stroke-width="3"/>
+        <path d="M486 394h37M486 406h37" stroke="#3a2e24" stroke-width="3.4" stroke-linecap="round"/>
+        <g class="bobber">
+          <circle cx="452" cy="404" r="14" fill="#3fae6b" stroke="#3a2e24" stroke-width="3.4"/>
+          <path d="M446 404l4.5 4.5 9-10" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <text class="maplbl" x="452" y="524" text-anchor="middle" font-size="16">Trạm điện khu phố</text>
+        <text class="mapsub" x="452" y="542" text-anchor="middle">đi tới cửa là vào</text>
       </g>
 
       <!-- Mầm đi bộ -->
@@ -582,6 +647,111 @@
       <div class="warnrow" id="ic-warn" style="display:none"></div>
     </div>
     <div class="board" id="board"></div>
+  </div>
+</section>
+
+<!-- ════════ 3 · TRẠM ĐIỆN KHU PHỐ ════════ -->
+<section id="scr-dien" class="screen">
+  <div class="topbar">
+    <button class="btn ghost" onclick="UI.goGarden()">← Khu vườn</button>
+    <h1 class="stick" style="transform:rotate(-1deg)">🔌 Trạm điện khu phố</h1>
+    <div class="sp"></div>
+    <div class="tally" title="Số nhà đang có điện">
+      <span style="font-weight:700;font-size:13px;color:var(--muted)">NHÀ SÁNG</span>
+      <div class="crates" id="dcrates"></div>
+      <b id="dlit">0/6</b>
+    </div>
+    <button class="btn warn" id="dbtnReset">Ca mới</button>
+  </div>
+
+  <div class="stagebox">
+   <div class="stagewrap">
+    <div class="foreman">
+      <svg class="face" width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="30" r="17" fill="#ffd9b0" stroke="#3a2e24" stroke-width="3"/>
+        <path d="M8 24q1-14 18-14t18 14l-3 3H11Z" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+        <rect x="21" y="6" width="10" height="8" rx="3" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+        <circle cx="20" cy="30" r="2.4" fill="#3a2e24"/><circle cx="32" cy="30" r="2.4" fill="#3a2e24"/>
+        <path d="M14 40q4 5 11 5" stroke="#3a2e24" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="bubble" id="dbubble"><span class="who">BÁC THỢ ĐIỆN</span><span id="dbubbleTxt">…</span></div>
+    </div>
+
+    <div class="mam">
+      <svg class="face" id="dmamFace" width="46" height="52" viewBox="0 0 46 52"></svg>
+      <div class="bubble quiet" id="dmamBubble"><span class="who">MẦM</span><span id="dmamTxt"></span></div>
+    </div>
+
+    <svg id="dstage" viewBox="0 0 1280 660" preserveAspectRatio="xMidYMid meet" aria-label="Khu phố mất điện"></svg>
+   </div>
+
+   <aside id="theory2">
+     <div class="hd">
+       <span class="stamp">✓ Cả phố sáng đèn</span>
+       <h3>Vừa rồi là chuyện gì</h3>
+     </div>
+     <p style="color:var(--muted);font-size:13.5px;margin-bottom:12px">
+       Khu phố bên cạnh vẫn đang sáng đèn — bạn vừa đọc vừa ngắm thành quả nhé.
+       Đã đo thử <b id="th2Probe">—</b> lần, thay <b id="th2Swap">—</b> món đồ.
+     </p>
+
+     <div class="who2">
+       <svg width="34" height="34" viewBox="0 0 52 52">
+         <circle cx="26" cy="30" r="17" fill="#ffd9b0" stroke="#3a2e24" stroke-width="3"/>
+         <path d="M8 24q1-14 18-14t18 14l-3 3H11Z" fill="#f2b722" stroke="#3a2e24" stroke-width="3"/>
+         <circle cx="20" cy="30" r="2.4" fill="#3a2e24"/><circle cx="32" cy="30" r="2.4" fill="#3a2e24"/>
+         <path d="M15 38q6 7 16 3" stroke="#3a2e24" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+       </svg>
+       <p><b>BÁC THỢ ĐIỆN</b><span id="th2Debrief">Điện không tự mất — nó chỉ dừng ở chỗ đường dây bị đứt.
+       Cứ lấy bút thử đo dọc đường dây, chỗ nào trước có sau mất là bệnh nằm ngay giữa hai điểm đó.</span></p>
+     </div>
+
+     <h4>Đường đi của dòng điện</h4>
+     <div class="chain">
+       <div><span class="n">1</span><span class="j">Trạm biến áp đầu phố</span><span class="s">nguồn điện</span></div>
+       <div><span class="n">2</span><span class="j">Cầu dao tổng</span><span class="s">công tắc cả phố</span></div>
+       <div><span class="n">3</span><span class="j">Cầu dao nhánh</span><span class="s">công tắc từng dãy nhà</span></div>
+       <div><span class="n">4</span><span class="j">Hộp cầu chì</span><span class="s">chốt bảo vệ — quá tải là tự đứt</span></div>
+       <div><span class="n">5</span><span class="j">Mối nối dây</span><span class="s">chỗ hay đứt ngầm nhất</span></div>
+       <div style="background:#fff8e0"><span class="n">6</span><span class="j">Bóng đèn trong nhà</span><span class="s">rồi vòng về nguồn — thành mạch kín</span></div>
+     </div>
+     <p style="font-size:14px">Muốn đèn sáng thì dòng điện phải đi được <b>trọn một vòng</b>.
+     Đứt ở bất kỳ đâu — dù chỉ một mối nối bé — là cả đoạn sau tối om.</p>
+
+     <h4>Trong sách viết thế nào</h4>
+     <div class="quote">
+       <p>… Dòng điện chỉ chạy trong <mark>mạch kín</mark>. <mark>Cầu chì</mark> là bộ phận bảo vệ mạch:
+       khi dòng điện vượt mức cho phép, dây chì nóng chảy và tự đứt để ngắt mạch.
+       Trước khi sửa chữa thiết bị điện, phải <mark>ngắt nguồn điện</mark> để bảo đảm an toàn …</p>
+       <p class="cite">Khoa học tự nhiên 8 — Bài Mạch điện, trang 98</p>
+     </div>
+
+     <div class="who2 mamrow" style="margin-top:12px">
+       <svg width="34" height="38" viewBox="0 0 46 52" id="dmamFaceTheory"></svg>
+       <p><b>MẦM</b><span id="th2Mam">À, hoá ra phải ngắt cầu dao rồi mới được đụng vào dây.
+       Hồi nãy mình quên, tê hết cả tay. Nhớ đời luôn.</span></p>
+     </div>
+
+     <div class="grow">
+       <svg width="30" height="34" viewBox="0 0 46 52" id="dmamGrowIcon"></svg>
+       <span>Mầm ra thêm một lá — giờ đang ở mức <b id="th2Stage">ba lá</b>.</span>
+     </div>
+
+     <div class="acts2">
+       <button class="btn" onclick="UI.dReplay()">Ca mới (bệnh khác)</button>
+       <button class="btn go" onclick="UI.dToMap()">Về khu vườn →</button>
+     </div>
+   </aside>
+  </div>
+
+  <div class="shelf">
+    <div class="infocard" id="dinfocard">
+      <button class="x" onclick="UI.dHideInfo()">✕</button>
+      <div class="nm" id="dic-nm"></div>
+      <div class="what" id="dic-what"></div>
+      <div class="warnrow" id="dic-warn" style="display:none"></div>
+    </div>
+    <div class="board" id="dboard"></div>
   </div>
 </section>
 
@@ -814,6 +984,94 @@ const SIM = (function(){
            SPAWN_PERIOD, SEG_DUR, TRANSFORM_T };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = SIM;
+
+/* ─────────────────────────────────────────────────────────────
+   SIM MẠCH ĐIỆN — thuần, không DOM. Dùng cho game Trạm điện khu phố.
+   Nguồn → cầu dao tổng → 3 nhánh (cầu dao nhánh → cầu chì → mối nối → 2 nhà).
+   Mỗi ca hỏng đúng MỘT linh kiện (cầu chì hoặc mối nối), xoay vòng theo số ca.
+   Không có khái niệm "sai": mọi thao tác chỉ đổi trạng thái, điện tự lan.
+   ───────────────────────────────────────────────────────────── */
+const CIRCUIT = (function(){
+  const BRANCHES = ['A', 'B', 'C'];
+  // các linh kiện có thể hỏng, xoay vòng để mỗi lần chơi lại một bệnh khác
+  const FAULTS = ['fuseB', 'jointC', 'fuseA', 'jointA', 'fuseC', 'jointB'];
+  const SPARES0 = { fuse: 2, wire: 2 };   // đồ dự phòng mang theo
+
+  function create(attempt){
+    const fault = FAULTS[(attempt || 0) % FAULTS.length];
+    const s = {
+      fault,                                   // linh kiện đang hỏng (giấu với người chơi)
+      main: true,                              // cầu dao tổng
+      br: { A: true, B: true, C: true },       // cầu dao nhánh
+      ok: {},                                  // tình trạng linh kiện
+      spares: { ...SPARES0 },
+      zaps: 0,                                 // số lần quên ngắt điện bị giật
+      probes: 0, swaps: 0,
+      events: []
+    };
+    for (const b of BRANCHES){ s.ok['fuse' + b] = true; s.ok['joint' + b] = true; }
+    s.ok[fault] = false;
+    return s;
+  }
+
+  // điện có tới ĐIỂM ĐO không — các điểm: 'nguon', 'sauMain', 'sauBr:X', 'sauFuse:X', 'sauJoint:X'
+  function powered(s, point){
+    if (point === 'nguon') return true;
+    if (!s.main) return false;
+    if (point === 'sauMain') return true;
+    const [k, b] = point.split(':');
+    if (!s.br[b]) return false;
+    if (k === 'sauBr') return true;
+    if (!s.ok['fuse' + b]) return false;
+    if (k === 'sauFuse') return true;
+    if (!s.ok['joint' + b]) return false;
+    return true;                              // sauJoint — tới tận nhà
+  }
+  const houseLit = (s, b) => powered(s, 'sauJoint:' + b);
+  const litCount = s => BRANCHES.reduce((n, b) => n + (houseLit(s, b) ? 2 : 0), 0);
+
+  function toggleMain(s){ s.main = !s.main; s.events.push({ type:'main', on: s.main }); }
+  function toggleBranch(s, b){ s.br[b] = !s.br[b]; s.events.push({ type:'branch', b, on: s.br[b] }); }
+
+  function probe(s, point){
+    s.probes += 1;
+    const on = powered(s, point);
+    s.events.push({ type:'probe', point, on });
+    return on;
+  }
+
+  // thay linh kiện: PHẢI ngắt cầu dao nhánh trước — còn điện là bị giật (không hỏng gì thêm,
+  // nhưng người chơi thấy hậu quả và bác thợ nhắc an toàn)
+  function swap(s, comp){
+    const b = comp.slice(-1);
+    const kind = comp.startsWith('fuse') ? 'fuse' : 'wire';
+    if (s.br[b] && s.main){ s.zaps += 1; s.events.push({ type:'zap', comp }); return { zap:true }; }
+    if (s.spares[kind] <= 0){ s.events.push({ type:'no-spare', kind }); return { empty:true }; }
+    s.spares[kind] -= 1; s.swaps += 1;
+    const wasBroken = !s.ok[comp];
+    s.ok[comp] = true;                        // đồ mới thì lành — thay nhầm chỗ chỉ tốn đồ
+    s.events.push({ type:'swap', comp, fixed: wasBroken });
+    return { fixed: wasBroken };
+  }
+
+  const win = s => s.main && BRANCHES.every(b => s.br[b] && houseLit(s, b));
+
+  function snapshot(s){
+    const houses = {};
+    for (const b of BRANCHES) houses[b] = houseLit(s, b);
+    return {
+      main: s.main, br: { ...s.br }, houses, lit: litCount(s),
+      spares: { ...s.spares }, zaps: s.zaps, probes: s.probes, swaps: s.swaps,
+      win: win(s)
+    };
+  }
+  const drainEvents = s => s.events.splice(0);
+
+  return { create, powered, probe, swap, toggleMain, toggleBranch, snapshot, drainEvents,
+           BRANCHES, FAULTS };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports.CIRCUIT = CIRCUIT;
+
 </script>
 
 <!-- ═══════════════════ LỚP GIAO DIỆN ═══════════════════ -->
@@ -1544,6 +1802,389 @@ const UI = (function(){
 
   function removeStation(pid){ padTapped(pid); }
 
+  /* ═══════════ TRẠM ĐIỆN KHU PHỐ — game 2 ═══════════
+     Cùng tinh thần xưởng tế bào: Mầm đi lại bê đồ nghề, làm gì thấy nấy.
+     Ngắt nhầm cầu dao → thêm nhà tối. Quên ngắt điện mà thay đồ → bị giật tê tay.
+     Không có chữ "sai" ở đâu cả. */
+  let dSim = null, dAttempt = 0, dDone = false, dEverStarted = false;
+  let dCarry = null, dLastAction = 0;
+  const dSaid = new Set();
+  const dHero = { x: 640, y: 560, tx: 640, ty: 560, face: 1, onArrive: null };
+  let dLayerFx = null, dHeroLayer = null;
+  const dProbeMarks = {};                 // điểm đo đã thử → true/false (giữ trên màn)
+
+  const DY = { A: 170, B: 330, C: 490 };  // cao độ 3 nhánh
+  const DPOS = {
+    main: { x: 258, y: 345 },
+    sw:   b => ({ x: 430, y: DY[b] }),
+    fuse: b => ({ x: 585, y: DY[b] }),
+    joint:b => ({ x: 735, y: DY[b] }),
+    tp:   { sauMain: { x: 345, y: 345 } }
+  };
+  for (const b of ['A','B','C']){
+    DPOS.tp['sauBr:' + b]    = { x: 505, y: DY[b] };
+    DPOS.tp['sauFuse:' + b]  = { x: 660, y: DY[b] };
+    DPOS.tp['sauJoint:' + b] = { x: 805, y: DY[b] };
+  }
+
+  const DTOOLS = {
+    but:  { ten:'Bút thử điện',  lam:'Chạm vào chấm đo trên dây: loé vàng là chỗ đó CÓ điện, xám là mất.', chiHoi:'Đo hai bên một món đồ — trước có sau mất thì bệnh nằm ngay đó.' },
+    fuse: { ten:'Cầu chì mới',   lam:'Thay cho hộp cầu chì. Nhớ ngắt cầu dao nhánh trước rồi hẵng thay.', chiHoi:'Thay nhầm chỗ lành thì chỉ tốn đồ thôi, không hỏng gì thêm.' },
+    wire: { ten:'Cuộn dây nối',  lam:'Nối lại mối nối bị đứt ngầm. Cũng phải ngắt điện trước.', chiHoi:'Mối nối nhìn ngoài y hệt nhau — phải đo mới biết cái nào đứt.' }
+  };
+  function dToolGlyph(id, s){
+    const k = s / 40;
+    const g = b => `<g transform="scale(${k})">${b}</g>`;
+    if (id === 'but') return g(`<rect x="14" y="4" width="12" height="24" rx="4" fill="#f2b722" stroke="#3a2e24" stroke-width="2.6"/><path d="M17 28h6l-3 8Z" fill="#c9cdd3" stroke="#3a2e24" stroke-width="2.2"/><circle cx="20" cy="10" r="2.6" fill="#e05648"/>`);
+    if (id === 'fuse') return g(`<rect x="8" y="14" width="24" height="12" rx="5" fill="#fdfbf4" stroke="#3a2e24" stroke-width="2.6"/><rect x="4" y="15" width="6" height="10" rx="2" fill="#9aa4ae" stroke="#3a2e24" stroke-width="2.2"/><rect x="30" y="15" width="6" height="10" rx="2" fill="#9aa4ae" stroke="#3a2e24" stroke-width="2.2"/>`);
+    return g(`<circle cx="20" cy="20" r="11" fill="none" stroke="#c77b3a" stroke-width="5"/><circle cx="20" cy="20" r="11" fill="none" stroke="#3a2e24" stroke-width="1.6"/><path d="M31 20h7" stroke="#c77b3a" stroke-width="4" stroke-linecap="round"/>`);
+  }
+
+  function dSpeak(text, key){
+    if (key){ if (dSaid.has(key)) return; dSaid.add(key); }
+    const b = $('#dbubble');
+    $('#dbubbleTxt').textContent = text;
+    b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+    document.body.classList.add('spk-bac'); document.body.classList.remove('spk-mam');
+  }
+  function dMamSay(text, mood, key){
+    if (key){ if (dSaid.has('m:' + key)) return; dSaid.add('m:' + key); }
+    const b = $('#dmamBubble');
+    $('#dmamTxt').textContent = text;
+    b.classList.remove('quiet', 'pop'); void b.offsetWidth; b.classList.add('pop');
+    document.body.classList.add('spk-mam'); document.body.classList.remove('spk-bac');
+    const f = $('#dmamFace'); if (f) f.innerHTML = mamGlyph(mamStage, mood || 'calm');
+  }
+
+  /* ---------- dựng cảnh phố ---------- */
+  function dBuildScene(){
+    const svg = $('#dstage'); svg.innerHTML = '';
+    // trời chiều + nền phố
+    E('rect', { x:0, y:0, width:1280, height:660, rx:26, fill:'#f3e6cd' }, svg);
+    E('rect', { x:0, y:596, width:1280, height:64, rx:20, fill:'#e2d2ae' }, svg);
+    for (let gx = 60; gx < 1240; gx += 74) E('circle', { cx:gx, cy:628, r:2.6, fill:'#c9b389' }, svg);
+    const t = E('text', { x:640, y:44, 'text-anchor':'middle', class:'biglbl' }, svg);
+    t.textContent = 'KHU PHỐ LÚC CHẬP TỐI — NỬA PHỐ MẤT ĐIỆN';
+
+    // cột điện + trạm biến áp (nguồn)
+    E('rect', { x:96, y:150, width:14, height:460, fill:'#a4703d', stroke:'#3a2e24', 'stroke-width':3.5 }, svg);
+    E('path', { d:'M60 176h86M60 196h86', stroke:'#3a2e24', 'stroke-width':4, 'stroke-linecap':'round' }, svg);
+    E('rect', { x:66, y:210, width:74, height:84, rx:8, fill:'#8b98a6', stroke:'#3a2e24', 'stroke-width':3.5 }, svg);
+    E('path', { d:'M83 232l-7 13h9l-7 13', stroke:'#f2b722', 'stroke-width':3.4, fill:'none', 'stroke-linecap':'round' }, svg);
+    const nt = E('text', { x:103, y:640, 'text-anchor':'middle', class:'stlbl' }, svg);
+    nt.textContent = 'TRẠM BIẾN ÁP';
+
+    // lớp động
+    E('g', { id:'dwires' }, svg);
+    E('g', { id:'dnodes' }, svg);
+    E('g', { id:'dmarks' }, svg);
+    dLayerFx = E('g', { id:'dfx' }, svg);
+    dHeroLayer = null;
+    dRender();
+  }
+
+  function dWirePath(x1, y1, x2, y2){
+    const mx = (x1 + x2) / 2;
+    return `M${x1} ${y1}C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`;
+  }
+
+  function dRender(){
+    if (!dSim) return;
+    const s = CIRCUIT.snapshot(dSim);
+    $('#dlit').textContent = s.lit + '/6';
+    const crates = $('#dcrates');
+    if (crates.childElementCount !== 6){ crates.innerHTML = ''; for (let i = 0; i < 6; i++) crates.appendChild(document.createElement('i')); }
+    [...crates.children].forEach((c, i) => c.classList.toggle('f', i < s.lit));
+
+    // dây: sáng vàng khi có điện
+    const W = $('#dwires'); W.innerHTML = '';
+    const seg = (d, live) => E('path', { d, class:'dwire' + (live ? ' live' : '') }, W);
+    seg(dWirePath(140, 252, DPOS.main.x - 34, DPOS.main.y), true);
+    for (const b of ['A','B','C']){
+      const y = DY[b];
+      seg(dWirePath(DPOS.main.x + 34, DPOS.main.y, DPOS.sw(b).x - 26, y), s.main);
+      seg(dWirePath(DPOS.sw(b).x + 26, y, DPOS.fuse(b).x - 30, y), CIRCUIT.powered(dSim, 'sauBr:' + b));
+      seg(dWirePath(DPOS.fuse(b).x + 30, y, DPOS.joint(b).x - 22, y), CIRCUIT.powered(dSim, 'sauFuse:' + b));
+      const litJ = CIRCUIT.powered(dSim, 'sauJoint:' + b);
+      seg(dWirePath(DPOS.joint(b).x + 22, y, 880, y - 12), litJ);
+      seg(dWirePath(DPOS.joint(b).x + 22, y, 1066, y - 12), litJ);
+    }
+
+    // tủ, cầu dao, cầu chì, mối nối, nhà
+    const N = $('#dnodes'); N.innerHTML = '';
+    // tủ tổng
+    const mg = E('g', { class:'dswitch', 'data-act':'main' }, N);
+    E('rect', { x:DPOS.main.x - 34, y:DPOS.main.y - 46, width:68, height:92, rx:10, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':4 }, mg);
+    E('rect', { x:DPOS.main.x - 9, y: s.main ? DPOS.main.y - 30 : DPOS.main.y - 2, width:18, height:32, rx:6, fill: s.main ? '#3fae6b' : '#e05648', stroke:'#3a2e24', 'stroke-width':3 }, mg);
+    dLabel(N, DPOS.main.x, DPOS.main.y + 64, 'CẦU DAO TỔNG', s.main ? 'đang đóng' : 'đang ngắt');
+    for (const b of ['A','B','C']){
+      const y = DY[b];
+      const sg = E('g', { class:'dswitch', 'data-act':'br', 'data-b':b }, N);
+      E('rect', { x:DPOS.sw(b).x - 26, y:y - 30, width:52, height:60, rx:9, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':3.6 }, sg);
+      E('rect', { x:DPOS.sw(b).x - 7, y: s.br[b] ? y - 20 : y + 2, width:14, height:20, rx:5, fill: s.br[b] ? '#3fae6b' : '#e05648', stroke:'#3a2e24', 'stroke-width':2.6 }, sg);
+      dLabel(N, DPOS.sw(b).x, y + 48, 'CẦU DAO ' + b, s.br[b] ? 'đóng' : 'ngắt');
+      const fg = E('g', { class:'dcomp', 'data-comp':'fuse' + b }, N);
+      E('rect', { x:DPOS.fuse(b).x - 30, y:y - 18, width:60, height:36, rx:9, fill:'#fdfbf4', stroke:'#3a2e24', 'stroke-width':3.6 }, fg);
+      E('rect', { x:DPOS.fuse(b).x - 38, y:y - 9, width:10, height:18, rx:3, fill:'#9aa4ae', stroke:'#3a2e24', 'stroke-width':2.4 }, fg);
+      E('rect', { x:DPOS.fuse(b).x + 28, y:y - 9, width:10, height:18, rx:3, fill:'#9aa4ae', stroke:'#3a2e24', 'stroke-width':2.4 }, fg);
+      dLabel(N, DPOS.fuse(b).x, y + 40, 'Hộp cầu chì', 'cầu chì');
+      const jg = E('g', { class:'dcomp', 'data-comp':'joint' + b }, N);
+      E('circle', { cx:DPOS.joint(b).x, cy:y, r:15, fill:'#3a2e24' }, jg);
+      E('path', { d:`M${DPOS.joint(b).x - 15} ${y}a15 15 0 0 1 30 0`, fill:'#5a4a3a' }, jg);
+      dLabel(N, DPOS.joint(b).x, y + 38, 'Mối nối', 'điểm nối dây');
+      // 2 nhà
+      dHouse(N, 880, y - 12, s.houses[b]);
+      dHouse(N, 1066, y - 12, s.houses[b]);
+    }
+    // điểm đo — chỉ hiện khi cầm bút thử (body.probing)
+    for (const tp in DPOS.tp){
+      const p = DPOS.tp[tp];
+      const g = E('g', { class:'dtp', 'data-tp':tp }, N);
+      E('circle', { cx:p.x, cy:p.y, r:12, fill:'#fff', stroke:'#3a7fd0', 'stroke-width':3, 'stroke-dasharray':'4 4' }, g);
+      E('circle', { cx:p.x, cy:p.y, r:4, fill:'#3a7fd0' }, g);
+    }
+    // kết quả đo đã lưu
+    const M = $('#dmarks'); M.innerHTML = '';
+    for (const tp in dProbeMarks){
+      const p = DPOS.tp[tp];
+      const on = dProbeMarks[tp];
+      const g = E('g', { transform:`translate(${p.x},${p.y - 26})` }, M);
+      E('circle', { r:11, fill: on ? '#fff4cf' : '#e8e4dc', stroke: on ? '#d99a06' : '#8b98a6', 'stroke-width':2.6 }, g);
+      if (on) E('path', { d:'M2 -7l-5 6h6l-5 8', stroke:'#d99a06', 'stroke-width':2.6, fill:'none', 'stroke-linecap':'round' }, g);
+      else E('path', { d:'M-5 -5l10 10M5 -5l-10 10', stroke:'#8b98a6', 'stroke-width':2.6, 'stroke-linecap':'round' }, g);
+    }
+    dRefreshTray();
+  }
+  function dLabel(parent, x, y, ten, sach){
+    const w = Math.max(84, ten.length * 7.6 + 18);
+    E('rect', { x:x - w/2, y:y - 13, width:w, height:32, rx:8, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':2.4 }, parent);
+    const t1 = E('text', { x, y, 'text-anchor':'middle', class:'stlbl', 'font-size':'11.5' }, parent); t1.textContent = ten;
+    const t2 = E('text', { x, y:y + 13, 'text-anchor':'middle', 'font-size':'10', 'font-style':'italic', fill:'#8a7a66' }, parent); t2.textContent = sach;
+  }
+  function dHouse(parent, cx, baseY, lit){
+    const g = E('g', {}, parent);
+    E('ellipse', { cx, cy:baseY + 2, rx:52, ry:9, fill:'rgba(58,46,36,.13)' }, g);
+    E('rect', { x:cx - 44, y:baseY - 66, width:88, height:66, rx:8, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':3.6 }, g);
+    E('path', { d:`M${cx - 52} ${baseY - 60}q52-34 104 0l-6 11h-92Z`, fill:'#c9bda3', stroke:'#3a2e24', 'stroke-width':3.6 }, g);
+    E('rect', { class:'dhouse-win', x:cx - 26, y:baseY - 44, width:22, height:20, rx:4,
+      fill: lit ? '#ffdf7e' : '#5a6b7d', stroke:'#3a2e24', 'stroke-width':2.6 }, g);
+    E('rect', { class:'dhouse-win', x:cx + 6, y:baseY - 44, width:22, height:20, rx:4,
+      fill: lit ? '#ffdf7e' : '#5a6b7d', stroke:'#3a2e24', 'stroke-width':2.6 }, g);
+    if (lit) E('circle', { cx, cy:baseY - 34, r:34, fill:'#ffdf7e', opacity:.16 }, g);
+  }
+
+  /* ---------- khay đồ nghề ---------- */
+  function dBuildTray(){
+    const board = $('#dboard'); board.innerHTML = '';
+    for (const id in DTOOLS){
+      const c = document.createElement('div');
+      c.className = 'chip'; c.dataset.tool = id;
+      c.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40">${dToolGlyph(id, 40)}</svg>` +
+        `<b>${DTOOLS[id].ten}</b><small id="dcount-${id}"></small>`;
+      c.addEventListener('click', () => dPickTool(id));
+      board.appendChild(c);
+    }
+    dRefreshTray();
+  }
+  function dRefreshTray(){
+    if (!dSim) return;
+    const s = CIRCUIT.snapshot(dSim);
+    const cnt = { but:'đo bao nhiêu cũng được', fuse:'còn ' + s.spares.fuse + ' cái', wire:'còn ' + s.spares.wire + ' cuộn' };
+    document.querySelectorAll('#dboard .chip').forEach(c => {
+      const id = c.dataset.tool;
+      const el = c.querySelector('#dcount-' + id); if (el) el.textContent = cnt[id];
+      c.classList.toggle('sel', dCarry === id);
+      c.classList.toggle('used', (id === 'fuse' && !s.spares.fuse) || (id === 'wire' && !s.spares.wire));
+    });
+  }
+  function dShowInfo(id){
+    const o = DTOOLS[id];
+    $('#dic-nm').textContent = o.ten;
+    $('#dic-nm').style.color = '#2b62a8';
+    $('#dic-what').textContent = o.lam;
+    const w = $('#dic-warn'); w.textContent = 'Mẹo: ' + o.chiHoi; w.style.display = '';
+    $('#dinfocard').classList.add('on');
+  }
+  const dHideInfo = () => $('#dinfocard').classList.remove('on');
+
+  /* ---------- Mầm đi lại trong phố ---------- */
+  function dWalkTo(x, y, onArrive){
+    dHero.tx = Math.min(1200, Math.max(160, x));
+    dHero.ty = Math.min(590, Math.max(120, y));
+    dHero.onArrive = onArrive || null;
+    if (dHero.tx !== dHero.x) dHero.face = dHero.tx > dHero.x ? 1 : -1;
+  }
+  function dTick(dt){
+    const dx = dHero.tx - dHero.x, dy = dHero.ty - dHero.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 2){
+      const step = Math.min(d, WALK_SPEED * dt);
+      dHero.x += dx / d * step; dHero.y += dy / d * step;
+    } else if (dHero.onArrive){ const f = dHero.onArrive; dHero.onArrive = null; f(); }
+    dDrawHero(d > 2);
+  }
+  function dDrawHero(moving){
+    if (!dHeroLayer || !dHeroLayer.isConnected){
+      const svg = $('#dstage'); if (!svg) return;
+      dHeroLayer = E('g', { id:'dhero' }, svg);
+    }
+    const bob = moving ? Math.sin(performance.now() / 70) * 4 : 0;
+    const carry = dCarry
+      ? `<g transform="translate(-20,-44)">${dToolGlyph(dCarry, 40)}</g>`
+      : '';
+    dHeroLayer.innerHTML =
+      `<g transform="translate(${dHero.x},${dHero.y - 34 + bob})">
+         <ellipse cx="0" cy="36" rx="17" ry="5" fill="rgba(58,46,36,.2)"/>
+         <g transform="scale(${1.35 * dHero.face},1.35)"><g transform="translate(-23,-26)">${mamGlyph(mamStage, dCarry ? 'oh' : 'calm')}</g></g>
+         ${carry}
+       </g>`;
+  }
+  function dStagePoint(e){
+    const svg = $('#dstage');
+    return new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  /* ---------- thao tác ---------- */
+  function dPickTool(id){
+    const chip = document.querySelector(`#dboard .chip[data-tool="${id}"]`);
+    let x = 640;
+    if (chip){
+      const r = chip.getBoundingClientRect();
+      const svg = $('#dstage');
+      const p = new DOMPoint(r.x + r.width / 2, 0).matrixTransform(svg.getScreenCTM().inverse());
+      x = Math.min(1150, Math.max(180, p.x));
+    }
+    dWalkTo(x, 585, () => {
+      dCarry = id; dLastAction = performance.now();
+      document.body.classList.toggle('probing', id === 'but');
+      dShowInfo(id); dRefreshTray(); dDrawHero(false);
+      if (id === 'but') dMamSay('Cầm bút rồi! Mấy chấm xanh trên dây là chỗ đo được đó hả bạn?', 'oh', 'but1');
+    });
+  }
+  function dHandleEvents(){
+    for (const ev of CIRCUIT.drainEvents(dSim)){
+      switch (ev.type){
+        case 'zap': {
+          dFxZap(); dHero.zapT = 1;
+          dSpeak('Ấy chết! Còn điện mà đã đụng vào — may là giật nhẹ. NGẮT CẦU DAO nhánh đó trước đã cậu ơi.');
+          dMamSay('Tê hết cả tay… ra là phải ngắt điện rồi mới được thay đồ hả?', 'oh');
+          break;
+        }
+        case 'swap':
+          if (ev.fixed){ dMamSay('Sáng rồi sáng rồi! Vậy bệnh nằm đúng chỗ đó thật hả?', 'yay'); }
+          else dMamSay('Thay xong mà vẫn tối… vậy chắc bệnh không nằm ở đó nhỉ? Đo tiếp không?', 'oh');
+          break;
+        case 'no-spare':
+          dSpeak('Hết đồ dự phòng rồi. Bấm "Ca mới" làm lại từ đầu, lần này đo kỹ trước rồi hẵng thay.');
+          break;
+        case 'probe':
+          if (!ev.on) dMamSay('Ủa chỗ này mất điện nè. Vậy bệnh nằm trước hay sau chỗ này ta?', 'oh', 'probe-off');
+          break;
+        case 'main':
+          if (!ev.on) dMamSay('Cả phố tối thui luôn! Cầu dao tổng mà ngắt là cả khu mất điện thật hả?', 'oh', 'main-off');
+          break;
+      }
+    }
+    const s = CIRCUIT.snapshot(dSim);
+    if (s.win && !dDone){ dDone = true; setTimeout(dShowDone, 900); }
+    dRender();
+  }
+  function dFxZap(){
+    const g = E('g', {}, dLayerFx);
+    g.innerHTML = `<path d="M0 -26l-9 14h11l-9 16" stroke="#f2b722" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    g.setAttribute('transform', `translate(${dHero.x},${dHero.y - 40})`);
+    if (dHeroLayer) { dHeroLayer.classList.remove('zapping'); void dHeroLayer.getBBox; dHeroLayer.classList.add('zapping'); }
+    setTimeout(() => g.remove(), 500);
+  }
+
+  function dShowDone(){
+    const s = CIRCUIT.snapshot(dSim);
+    $('#th2Probe').textContent = s.probes;
+    $('#th2Swap').textContent = s.swaps;
+    if (mamStage < 5) mamStage += 1;
+    $('#th2Stage').textContent = MAM_STAGE_NAME[mamStage];
+    $('#dmamFaceTheory').innerHTML = mamGlyph(mamStage, 'yay');
+    $('#dmamGrowIcon').innerHTML = mamGlyph(mamStage, 'yay');
+    $('#th2Mam').textContent = s.zaps
+      ? 'À, hoá ra phải ngắt cầu dao rồi mới được đụng vào dây. Hồi nãy mình quên, tê hết cả tay. Nhớ đời luôn.'
+      : 'Mình đo trước rồi mới thay nên không bị giật phát nào. Đo hai đầu là ra ngay chỗ đứt!';
+    dSpeak('Cả phố sáng rồi, cảm ơn cậu. Đọc cái bảng bên phải đi — nghề điện nằm gọn trong đó đấy.');
+    dMamSay('Sáng hết 6 nhà rồi! Bạn đọc bảng đi, mình ngồi ngắm đèn.', 'yay');
+    $('#scr-dien').classList.add('done-mode');
+    $('#theory2').scrollTop = 0;
+  }
+
+  function dReset(){
+    dSim = CIRCUIT.create(dAttempt++);
+    dDone = false; dCarry = null; dSaid.clear();
+    for (const k in dProbeMarks) delete dProbeMarks[k];
+    document.body.classList.remove('probing');
+    $('#scr-dien').classList.remove('done-mode');
+    dHero.x = dHero.tx = 640; dHero.y = dHero.ty = 560; dHero.onArrive = null;
+    dLastAction = performance.now();
+    dBuildScene(); dBuildTray(); dHideInfo();
+    dSpeak('Nửa khu phố tối om từ chập tối, bệnh nằm đâu đó trên đường dây. Đồ nghề ở khay dưới — cậu dò giúp tôi.');
+    dMamSay('Nhà nào cũng tối thui… mình bắt đầu đo từ chỗ nào trước ta?', 'oh');
+    dDrawHero(false);
+  }
+  function dCheckStuck(){
+    if (!dSim || dDone) return;
+    if (performance.now() - dLastAction < 40000) return;
+    dSpeak('Lấy bút thử đo dọc đường dây ấy — điểm TRƯỚC có điện mà điểm SAU mất là bệnh nằm ngay giữa hai điểm đó.', 'stuck');
+  }
+
+  function goDien(){
+    showScreen('scr-dien');
+    if (!dEverStarted || dDone) dReset();
+    dEverStarted = true;
+  }
+  function dReplay(){ dReset(); }
+  function dToMap(){ $('#scr-dien').classList.remove('done-mode'); goGarden(); }
+
+  /* chạm trong phố */
+  $('#dstage').addEventListener('click', e => {
+    dLastAction = performance.now();
+    const sw = e.target.closest('.dswitch');
+    if (sw){
+      const p = sw.dataset.act === 'main' ? DPOS.main : DPOS.sw(sw.dataset.b);
+      const act = sw.dataset.act, b = sw.dataset.b;
+      dWalkTo(p.x, p.y + 78, () => {
+        act === 'main' ? CIRCUIT.toggleMain(dSim) : CIRCUIT.toggleBranch(dSim, b);
+        dHandleEvents();
+      });
+      return;
+    }
+    const tp = e.target.closest('.dtp');
+    if (tp && dCarry === 'but'){
+      const id = tp.dataset.tp, p = DPOS.tp[id];
+      dWalkTo(p.x, p.y + 66, () => {
+        dProbeMarks[id] = CIRCUIT.probe(dSim, id);
+        dHandleEvents();
+      });
+      return;
+    }
+    const comp = e.target.closest('.dcomp');
+    if (comp){
+      const id = comp.dataset.comp;
+      const need = id.startsWith('fuse') ? 'fuse' : 'wire';
+      const p = id.startsWith('fuse') ? DPOS.fuse(id.slice(-1)) : DPOS.joint(id.slice(-1));
+      if (dCarry !== need){
+        dMamSay(need === 'fuse' ? 'Chỗ này hình như phải dùng cầu chì mới chứ nhỉ?' : 'Chỗ này chắc cần cuộn dây nối mới đúng không ta?', 'oh');
+        return;
+      }
+      dWalkTo(p.x, p.y + 70, () => {
+        const r = CIRCUIT.swap(dSim, id);
+        if (r.fixed !== undefined && !r.zap){ dCarry = null; document.body.classList.remove('probing'); dHideInfo(); }
+        dHandleEvents(); dDrawHero(false);
+      });
+      return;
+    }
+    // chạm đất → đi chơi
+    const p = dStagePoint(e);
+    if (p.x > 60 && p.x < 1220 && p.y > 80 && p.y < 640) dWalkTo(p.x, p.y);
+  });
+  $('#dbtnReset').addEventListener('click', dReset);
+
   /* ---------- vòng lặp ---------- */
   let doneTimer = null;      // hẹn giờ mở bảng lý thuyết — huỷ khi dẹp sàn / về bản đồ
   let lastActionAt = 0;      // lần cuối người chơi thao tác, để biết khi nào bác cần gỡ bí
@@ -1565,11 +2206,12 @@ const UI = (function(){
     // nhân vật là lớp hình, đi theo đồng hồ màn hình, không đụng vào sim
     if ($('#scr-play').classList.contains('on')) heroTick(uiDt);
     if ($('#scr-map').classList.contains('on')) gardenTick(uiDt);
+    if ($('#scr-dien').classList.contains('on')){ dTick(uiDt); dCheckStuck(); }
   }
 
   /* ---------- điều hướng & nút ---------- */
   let everStarted = false;
-  const SCREENS = ['scr-topic', 'scr-map', 'scr-play'];
+  const SCREENS = ['scr-topic', 'scr-map', 'scr-play', 'scr-dien'];
   function showScreen(id){
     for (const sid of SCREENS) $('#' + sid).classList.toggle('on', sid === id);
   }
@@ -1577,11 +2219,11 @@ const UI = (function(){
 
   /* ── Kho câu hỏi: 4 môn, thẻ nào có game thì vào được ── */
   const TOPICS = [
-    { mon:'Sinh học', hoi:'Làm sao tế bào biết phải làm việc gì?', lop:'Sinh học 10', game:true },
+    { mon:'Sinh học', hoi:'Làm sao tế bào biết phải làm việc gì?', lop:'Sinh học 10', game:'lab' },
     { mon:'Sinh học', hoi:'Cây ăn gì để sống?',                    lop:'Sinh học 11' },
     { mon:'Sinh học', hoi:'Vì sao tim đập cả đời không nghỉ?',      lop:'Sinh học 8' },
     { mon:'Sinh học', hoi:'Vi khuẩn bé cỡ nào mà làm mình ốm?',     lop:'Sinh học 10' },
-    { mon:'Vật lý',   hoi:'Điện trong nhà chạy từ đâu tới?',        lop:'KHTN 8' },
+    { mon:'Vật lý',   hoi:'Điện trong nhà chạy từ đâu tới?',        lop:'KHTN 8', game:'dien' },
     { mon:'Vật lý',   hoi:'Nam châm hút được những thứ gì?',        lop:'KHTN 7' },
     { mon:'Vật lý',   hoi:'Cầu vồng từ đâu ra?',                    lop:'KHTN 9' },
     { mon:'Hóa học',  hoi:'Muối tan đi đâu trong cốc nước?',        lop:'KHTN 8' },
@@ -1654,8 +2296,17 @@ const UI = (function(){
   }
 
   let curMon = 'Tất cả', heroIdx = 0, heroBusy = false;
-  const heroList = () => TOPICS.map((t, i) => ({ ...t, i }))
-    .filter(t => curMon === 'Tất cả' || t.mon === curMon);
+  // Lọc "Tất cả" thì xen kẽ môn: Sinh–Lý–Hóa–Địa–Sinh–Lý… lướt tới đâu đổi vị tới đó
+  function heroList(){
+    const all = TOPICS.map((t, i) => ({ ...t, i }));
+    if (curMon !== 'Tất cả') return all.filter(t => t.mon === curMon);
+    const groups = {};
+    for (const t of all) (groups[t.mon] = groups[t.mon] || []).push(t);
+    const order = Object.keys(groups), mixed = [];
+    for (let k = 0; mixed.length < all.length; k++)
+      for (const m of order) if (groups[m][k]) mixed.push(groups[m][k]);
+    return mixed;
+  }
 
   function pickSubject(mon){ curMon = mon; heroIdx = 0; renderTopics(); }
 
@@ -1700,7 +2351,7 @@ const UI = (function(){
     const go = $('#hero-go');
     go.disabled = !cur.game;
     $('#hero-go-txt').textContent = cur.game ? 'Đi thôi' : 'Chưa mở';
-    go.onclick = cur.game ? function(){ goGarden(); } : null;
+    go.onclick = cur.game ? function(){ chonGame = cur.game; goGarden(); } : null;
     const L = (heroIdx + n - 1) % n, R = (heroIdx + 1) % n, B = (heroIdx + 2) % n;
     document.querySelectorAll('#hero-stage .figure').forEach(function(el){
       const k = +el.dataset.k;
@@ -1716,12 +2367,16 @@ const UI = (function(){
   }
 
   /* khu vườn: Mầm đi bộ tới nhà bài học */
+  let chonGame = 'lab';                       // chủ đề vừa chọn ở màn ngoài quyết định nút tiến
   const gHero = { x: 440, y: 340, tx: 440, ty: 340, face: 1, onArrive: null };
-  const LAB_DOOR = { x: 255, y: 418 };
+  const DOORS = { lab: { x: 255, y: 418 }, dien: { x: 452, y: 500 } };
+  const LAB_DOOR = DOORS.lab;
   function goGarden(){
     SIM.setRun(sim, false); syncRunBtn();
     showScreen('scr-map');
     drawMapTree();
+    const nm = { lab:'Xưởng lắp tế bào', dien:'Trạm điện khu phố' }[chonGame] || 'Xưởng lắp tế bào';
+    const g = $('#gnav-go'); if (g) g.textContent = 'Vào ' + nm + ' →';
   }
   const goMap = goGarden;
   function gardenWalkTo(x, y, onArrive){
@@ -1731,7 +2386,8 @@ const UI = (function(){
     if (gHero.tx !== gHero.x) gHero.face = gHero.tx > gHero.x ? 1 : -1;
   }
   function gardenGo(which){
-    if (which === 'lab') gardenWalkTo(LAB_DOOR.x, LAB_DOOR.y, () => goPlay());
+    const d = DOORS[which] || DOORS.lab;
+    gardenWalkTo(d.x, d.y, () => which === 'dien' ? goDien() : goPlay());
   }
   function gardenTick(dt){
     let kx = 0, ky = 0;
@@ -1755,7 +2411,13 @@ const UI = (function(){
       const f = gHero.onArrive; gHero.onArrive = null; f();
     }
     // đi bộ tới sát cửa nhà mở là vào bài (kể cả đi bằng phím)
-    if (Math.hypot(gHero.x - LAB_DOOR.x, gHero.y - LAB_DOOR.y) < 34) { gHero.x = 440; gHero.y = 340; gHero.tx = 440; gHero.ty = 340; goPlay(); return; }
+    for (const w in DOORS){
+      if (Math.hypot(gHero.x - DOORS[w].x, gHero.y - DOORS[w].y) < 34){
+        gHero.x = 440; gHero.y = 340; gHero.tx = 440; gHero.ty = 340;
+        w === 'dien' ? goDien() : goPlay();
+        return;
+      }
+    }
     const gl = $('#gardenHero');
     if (gl){
       const bob = d > 2 ? Math.sin(performance.now() / 70) * 3.5 : 0;
@@ -1828,6 +2490,7 @@ const UI = (function(){
   window.__setRun = on => { SIM.setRun(sim, on); syncRunBtn(); };
   window.__state = () => ({
     screen: $('#scr-topic').classList.contains('on') ? 'topic'
+          : $('#scr-dien').classList.contains('on') ? 'dien'
           : $('#scr-map').classList.contains('on') ? 'map'
           : ($('#scr-play').classList.contains('done-mode') ? 'done' : 'play'),
     mamStage,
@@ -1838,6 +2501,7 @@ const UI = (function(){
     if (name === 'play') goPlay();
     else if (name === 'map' || name === 'garden'){ closeDone(); goGarden(); }
     else if (name === 'topic') goTopic();
+    else if (name === 'dien') goDien();
     else if (name === 'done') showDone();
   };
   window.__screenPos = id => {
@@ -1849,6 +2513,7 @@ const UI = (function(){
     return { x: p.x, y: p.y };
   };
   window.__sim = () => sim;   // cho probe sâu
+  window.__dstate = () => dSim ? { carry: dCarry, done: dDone, ...CIRCUIT.snapshot(dSim) } : null;
 
   /* ---------- khởi động ---------- */
   $('#hero-prev').addEventListener('click', () => heroNav('prev'));
@@ -1889,7 +2554,7 @@ const UI = (function(){
   buildScene(); buildTray(); drawMam('calm'); drawMapTree(); renderTopics();
   raf = requestAnimationFrame(loop);
 
-  return { goPlay, goMap, goTopic, goGarden, gardenGo, pickSubject, heroNav, heroJump, replay, doneToMap, hideInfo };
+  return { goPlay, goMap, goTopic, goGarden, gardenGo, pickSubject, heroNav, heroJump, replay, doneToMap, hideInfo, dReplay, dToMap, dHideInfo };
 })();
 </script>
 </body>
