@@ -10,7 +10,7 @@ const { chromium } = require(path.join('c:/Trường học số - source code/pr
   pg.on('pageerror', e => errors.push('pageerror: ' + e.message));
   pg.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 
-  const url = 'file:///' + path.resolve(__dirname, 'xuong-lap-te-bao.html').replace(/\\/g, '/');
+  const url = 'file:///' + path.resolve(__dirname, '..', 'xuong-lap-te-bao.html').replace(/\\/g, '/');
   await pg.goto(url);
   await pg.waitForTimeout(400);
   await pg.screenshot({ path: '_shot-1-map.png' });

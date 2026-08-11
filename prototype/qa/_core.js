@@ -33,7 +33,7 @@ const SIM = (function(){
 
   function create(){
     return {
-      t: 0, running: false, done: false,
+      t: 0, runT: 0, running: false, done: false,
       pads: { P1:null, P2:null, P3:null, P4:null, S1:null, S2:null },
       parcels: [],                // {id, kind, seg, pos, phase:'move'|'queue'|'transform', tt}
       nextId: 1,
@@ -73,6 +73,11 @@ const SIM = (function(){
     const org = s.pads[pad];
     if (!org) return null;
     s.pads[pad] = null;
+    // kiện đang biến đổi tại trạm vừa gỡ → trả về hàng chờ, tuyệt đối không
+    // để nhánh transform đọc ORGS[null] (sập vòng mô phỏng)
+    for (const p of s.parcels){
+      if (p.phase === 'transform' && padAtSeg(p.seg) === pad){ p.phase = 'queue'; p.tt = 0; }
+    }
     s.events.push({ type:'remove', pad, org });
     if (org === 'lyso' && pad === NEAR_NUCLEUS && !s.nucleusAlive) s.healTimer = 0;
     return org;
@@ -95,6 +100,7 @@ const SIM = (function(){
     }
 
     if (!s.running) return;
+    s.runT += dt;                 // thời gian ca làm việc thật (nguồn cho màn chốt)
 
     // sinh kiện
     if (s.nucleusAlive && !s.done){
@@ -128,10 +134,13 @@ const SIM = (function(){
           }
         }
       } else if (p.phase === 'transform'){
+        const pad = padAtSeg(p.seg);
+        const org = ORGS[s.pads[pad]];
+        if (!org){ p.phase = 'queue'; p.tt = 0; continue; }   // trạm biến mất giữa chừng
+        if (org.atp && !powered(s)) continue;                  // mất điện: máy đứng, kiện chờ trong máy
         p.tt -= dt;
         if (p.tt <= 0){
-          const pad = padAtSeg(p.seg);
-          p.kind = ORGS[s.pads[pad]].ra;
+          p.kind = org.ra;
           p.phase = 'move'; p.seg += 1; p.pos = 0;
         }
       }
@@ -163,7 +172,8 @@ const SIM = (function(){
   }
 
   function step(s, secs){
-    const n = Math.max(1, Math.round(secs / SUB));
+    // __step(0) phải là "vẽ lại, không tiến thời gian" theo contract
+    const n = Math.round(secs / SUB);
     for (let i = 0; i < n; i++) substep(s);
   }
 
@@ -171,7 +181,7 @@ const SIM = (function(){
     const queues = {};
     for (const pad of BELT) queues[pad] = queueAt(s, pad).length;
     return {
-      t: +s.t.toFixed(4), running: s.running, done: s.done, out: s.out,
+      t: +s.t.toFixed(4), runT: +s.runT.toFixed(4), running: s.running, done: s.done, out: s.out,
       pads: { ...s.pads }, powered: powered(s), nucleusAlive: s.nucleusAlive,
       parcels: s.parcels.map(p => ({ id:p.id, kind:p.kind, seg:p.seg, pos:+p.pos.toFixed(4), phase:p.phase, tt:+(p.tt||0).toFixed(4) })),
       queues, win: WIN

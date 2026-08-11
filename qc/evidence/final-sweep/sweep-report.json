@@ -1,0 +1,136 @@
+{
+  "console": [],
+  "states": {
+    "map-state": "map",
+    "play-initial": {
+      "screen": "play",
+      "t": 0.65,
+      "runT": 0,
+      "running": false,
+      "done": false,
+      "out": 0,
+      "pads": {
+        "P1": null,
+        "P2": null,
+        "P3": null,
+        "P4": null,
+        "S1": null,
+        "S2": null
+      },
+      "powered": false,
+      "nucleusAlive": true,
+      "parcels": [],
+      "queues": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "win": 8
+    },
+    "drag-ribo-P1": "ribo",
+    "after-9s-ribo-only": {
+      "running": true,
+      "out": 0,
+      "queues": {
+        "P1": 4,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "powered": false,
+      "parcels": 5,
+      "pads": {
+        "P1": "ribo",
+        "P2": null,
+        "P3": null,
+        "P4": null,
+        "S1": null,
+        "S2": null
+      }
+    },
+    "bubble-at-jam": "Trạm có rồi mà im re — nhìn cái pin đỏ với dây điện xem. Chưa có nguồn ⚡ kìa.",
+    "drag-tithe-S1": "tithe",
+    "drag-lnc-P2": "lnc",
+    "drag-golgi-P3": "golgi",
+    "drag-tuiti-P4": "tuiti",
+    "win-state": {
+      "done": true,
+      "out": 8,
+      "screen": "play",
+      "runT": 23.7417
+    },
+    "screen-after-win": "done",
+    "replay-state": {
+      "screen": "play",
+      "t": 0.4167,
+      "runT": 0,
+      "running": false,
+      "done": false,
+      "out": 0,
+      "pads": {
+        "P1": null,
+        "P2": null,
+        "P3": null,
+        "P4": null,
+        "S1": null,
+        "S2": null
+      },
+      "powered": false,
+      "nucleusAlive": true,
+      "parcels": [],
+      "queues": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "win": 8
+    },
+    "drag-lyso-S2": "lyso",
+    "bubble-lyso-warn": "Ối! Túi enzyme mà kê sát nhân là nó tiêu luôn cái nhân đấy!!",
+    "nucleus-after-lyso": {
+      "alive": false,
+      "bubble": "Đấy! Nhân bị tiêu rồi — cả xưởng hết nguồn đơn hàng. Gỡ nó ra mau!"
+    },
+    "nucleus-after-remove": {
+      "alive": true,
+      "bubble": "May quá, nhân hồi lại rồi. Tiếp tục nào."
+    },
+    "console-issues": "NONE"
+  },
+  "measures": {
+    "svgScale": 0.766,
+    "stlblFontPx": 10,
+    "padnumFontPx": 12.3,
+    "padhintFontPx": 11.5,
+    "stageRect": {
+      "x": 12,
+      "y": 61,
+      "w": 1256,
+      "h": 505.703125
+    },
+    "bubbleRect": {
+      "x": 87,
+      "y": 471.453125,
+      "w": 369,
+      "h": 87.25
+    },
+    "s1Screen": {
+      "x": 578.7026515151515,
+      "y": 483.95170454545456
+    },
+    "s2Screen": {
+      "x": 376.4214015151515,
+      "y": 211.17850378787878
+    },
+    "nucScreen": {
+      "x": 354.9673295454545,
+      "y": 330.7083333333333
+    },
+    "bubbleCoversS1": false,
+    "boardOverflowPx": 0,
+    "chipCount": 7
+  },
+  "notes": []
+}

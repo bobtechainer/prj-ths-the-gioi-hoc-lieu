@@ -103,7 +103,7 @@
 
   /* info card */
   .infocard{
-    position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);
+    position:absolute;left:58%;bottom:calc(100% + 10px);transform:translateX(-50%);
     width:min(430px,92vw);background:var(--card);border:2.5px solid var(--ink);
     border-radius:14px;box-shadow:var(--sh);padding:11px 14px;z-index:8;display:none;
   }
@@ -118,8 +118,8 @@
 
   /* svg text */
   text{font-family:"Segoe UI",system-ui,Arial,sans-serif;user-select:none;-webkit-user-select:none}
-  .padnum{font-size:15px;font-weight:800;fill:#b7a380}
-  .padhint{font-size:12px;font-weight:700;fill:#b7a380}
+  .padnum{font-size:16px;font-weight:800;fill:#a08c66}
+  .padhint{font-size:15px;font-weight:700;fill:#a08c66}
   .stlbl{font-size:13px;font-weight:800;fill:var(--ink)}
   .biglbl{font-size:15px;font-weight:800;fill:var(--ink);letter-spacing:.03em}
   .pad-hit{cursor:pointer}
@@ -160,11 +160,13 @@
   .src .cite{margin-top:8px;font-size:12px;color:var(--muted);font-weight:600}
   .acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 
+  body.dragging #infocard{display:none!important}  /* thẻ thông tin không được che pad khi đang kéo */
   @media (max-width:760px){
     .topbar h1{font-size:15px}
     .foreman{max-width:78vw}
     .bubble{font-size:13.5px}
-    .chip{width:88px}
+    .shelf .board{flex-wrap:wrap;justify-content:center;overflow-x:hidden} /* 2 hàng: mọi chip đều với tới, không cần cuộn ngang */
+    .chip{width:84px}
   }
 </style>
 </head>
@@ -346,7 +348,7 @@ const SIM = (function(){
 
   function create(){
     return {
-      t: 0, running: false, done: false,
+      t: 0, runT: 0, running: false, done: false,
       pads: { P1:null, P2:null, P3:null, P4:null, S1:null, S2:null },
       parcels: [],                // {id, kind, seg, pos, phase:'move'|'queue'|'transform', tt}
       nextId: 1,
@@ -386,6 +388,11 @@ const SIM = (function(){
     const org = s.pads[pad];
     if (!org) return null;
     s.pads[pad] = null;
+    // kiện đang biến đổi tại trạm vừa gỡ → trả về hàng chờ, tuyệt đối không
+    // để nhánh transform đọc ORGS[null] (sập vòng mô phỏng)
+    for (const p of s.parcels){
+      if (p.phase === 'transform' && padAtSeg(p.seg) === pad){ p.phase = 'queue'; p.tt = 0; }
+    }
     s.events.push({ type:'remove', pad, org });
     if (org === 'lyso' && pad === NEAR_NUCLEUS && !s.nucleusAlive) s.healTimer = 0;
     return org;
@@ -408,6 +415,7 @@ const SIM = (function(){
     }
 
     if (!s.running) return;
+    s.runT += dt;                 // thời gian ca làm việc thật (nguồn cho màn chốt)
 
     // sinh kiện
     if (s.nucleusAlive && !s.done){
@@ -441,10 +449,13 @@ const SIM = (function(){
           }
         }
       } else if (p.phase === 'transform'){
+        const pad = padAtSeg(p.seg);
+        const org = ORGS[s.pads[pad]];
+        if (!org){ p.phase = 'queue'; p.tt = 0; continue; }   // trạm biến mất giữa chừng
+        if (org.atp && !powered(s)) continue;                  // mất điện: máy đứng, kiện chờ trong máy
         p.tt -= dt;
         if (p.tt <= 0){
-          const pad = padAtSeg(p.seg);
-          p.kind = ORGS[s.pads[pad]].ra;
+          p.kind = org.ra;
           p.phase = 'move'; p.seg += 1; p.pos = 0;
         }
       }
@@ -476,7 +487,8 @@ const SIM = (function(){
   }
 
   function step(s, secs){
-    const n = Math.max(1, Math.round(secs / SUB));
+    // __step(0) phải là "vẽ lại, không tiến thời gian" theo contract
+    const n = Math.round(secs / SUB);
     for (let i = 0; i < n; i++) substep(s);
   }
 
@@ -484,7 +496,7 @@ const SIM = (function(){
     const queues = {};
     for (const pad of BELT) queues[pad] = queueAt(s, pad).length;
     return {
-      t: +s.t.toFixed(4), running: s.running, done: s.done, out: s.out,
+      t: +s.t.toFixed(4), runT: +s.runT.toFixed(4), running: s.running, done: s.done, out: s.out,
       pads: { ...s.pads }, powered: powered(s), nucleusAlive: s.nucleusAlive,
       parcels: s.parcels.map(p => ({ id:p.id, kind:p.kind, seg:p.seg, pos:+p.pos.toFixed(4), phase:p.phase, tt:+(p.tt||0).toFixed(4) })),
       queues, win: WIN
@@ -524,7 +536,7 @@ const UI = (function(){
   ];
   const PAD_XY = {
     P1: NODES[1], P2: NODES[2], P3: NODES[3], P4: NODES[4],
-    S1: { x: 560, y: 552 }, S2: { x: 262, y: 138 }
+    S1: { x: 560, y: 552 }, S2: { x: 296, y: 196 }
   };
   // cubic bezier từng đoạn, control uốn chữ S
   const SEGS = [];
@@ -617,7 +629,7 @@ const UI = (function(){
     const doorT = E('text', { x:1224, y:428, 'text-anchor':'middle', class:'stlbl' }, svg);
     doorT.textContent = 'CỬA XUẤT';
     // chồng kiện đã xuất (ngoài cửa)
-    window.__doneStack = E('g', { id:'donestack' }, svg);
+    E('g', { id:'donestack' }, svg);
 
     // BĂNG CHUYỀN
     let d = `M${NODES[0].x} ${NODES[0].y}`;
@@ -636,6 +648,10 @@ const UI = (function(){
     layerCable = E('g', {}, svg);
     drawCable(PAD_XY.S1, PAD_XY.P1);
     drawCable(PAD_XY.S1, PAD_XY.P3);
+
+    // nối Ô KHO vào vai nhân — cho thấy nó SÁT nhân (bẫy lysosome)
+    E('path', { d:'M296 252 Q286 292 246 318', fill:'none', stroke:'#c9b389',
+      'stroke-width':4, 'stroke-dasharray':'7 7', 'stroke-linecap':'round' }, svg);
 
     // NHÂN (dựng sẵn)
     const nuc = E('g', { id:'nucleus' }, svg);
@@ -691,14 +707,19 @@ const UI = (function(){
 
     // trạm — CHỈ dựng lại khi bố trí pads / nguồn điện / trạng thái chạy đổi,
     // nếu xoá-vẽ mỗi khung hình thì animation "bang" restart liên tục → trạm vô hình
-    const padsKey = JSON.stringify(s.pads) + '|' + s.powered + '|' + s.running;
-    if (padsKey !== lastPadsKey){ lastPadsKey = padsKey; drawStations(s); }
+    const padsJson = JSON.stringify(s.pads);
+    const padsKey = padsJson + '|' + s.powered + '|' + s.running;
+    if (padsKey !== lastPadsKey){
+      const layoutChanged = !lastPadsKey.startsWith(padsJson + '|');
+      lastPadsKey = padsKey;
+      drawStations(s, layoutChanged);   // pop chỉ khi bố trí đổi, không pop khi bật/tắt điện
+    }
 
     drawNucleusAndParcels(s);
     drawTally(s);
   }
 
-  function drawStations(s){
+  function drawStations(s, pop = true){
     layerSt.innerHTML = '';
     for (const pid of SIM.PADS){
       const org = s.pads[pid];
@@ -708,7 +729,7 @@ const UI = (function(){
       padG.querySelector('.padhint').style.display = org ? 'none' : '';
       if (!org) continue;
       const info = SIM.ORGS[org];
-      const g = E('g', { class:'stgroup bang', 'data-stpad':pid }, layerSt);
+      const g = E('g', { class:'stgroup' + (pop ? ' bang' : ''), 'data-stpad':pid }, layerSt);
       // nhà máy giấy
       E('ellipse', { cx:p.x, cy:p.y + 46, rx:56, ry:10, fill:'rgba(58,46,36,.12)' }, g);
       E('rect', { x:p.x-52, y:p.y-30, width:104, height:74, rx:12, fill:'#fffdf6', stroke:'#3a2e24', 'stroke-width':4 }, g);
@@ -771,7 +792,7 @@ const UI = (function(){
     for (const pad in queueCount){
       if (queueCount[pad] + 1 >= 3){
         const p = PAD_XY[pad];
-        const wig = Math.sin(performance.now() / 160) * 4;
+        const wig = Math.sin(s.t * 6.25) * 4;   // theo giờ sim → cùng state là cùng khung hình
         const g = E('g', { transform:`translate(${p.x - 74},${p.y - 66}) rotate(${wig})` }, layerParcel);
         E('circle', { cx:0, cy:0, r:15, fill:'#fff', stroke:'#e05648', 'stroke-width':3.5 }, g);
         const t = E('text', { x:0, y:6, 'text-anchor':'middle', 'font-size':'18', 'font-weight':'900', fill:'#e05648' }, g);
@@ -828,7 +849,7 @@ const UI = (function(){
           if (saidOnce.has('nopower')) speak('Có điện rồi đó! Nhìn tia chớp chạy theo dây kìa.', 'power-on');
           break;
         case 'exit': fxConfetti(); break;
-        case 'win': if (auto) setTimeout(showDone, 900); else showDone(); break;
+        case 'win': if (auto) doneTimer = setTimeout(showDone, 900); else showDone(); break;
       }
     }
     // nhắc thiếu điện (kiểm tra trạng thái, 1 lần)
@@ -907,7 +928,7 @@ const UI = (function(){
     $('#ic-nm').textContent = o.ten;
     $('#ic-nm').style.color = ORG_COLOR[id];
     $('#ic-what').textContent = o.lam;
-    $('#ic-in').textContent = o.vao ? SIM.KINDS[o.vao] : (o.power ? '—' : '—');
+    $('#ic-in').textContent = o.vao ? SIM.KINDS[o.vao] : '—';
     $('#ic-out').textContent = o.ra ? SIM.KINDS[o.ra] : (o.power ? 'điện ATP ⚡' : '—');
     const w = $('#ic-warn');
     if (o.hint){ w.textContent = '💡 ' + o.hint; w.style.display = ''; } else w.style.display = 'none';
@@ -915,19 +936,33 @@ const UI = (function(){
   }
   const hideInfo = () => $('#infocard').classList.remove('on');
 
+  // Kéo thả: chạm-không-kéo = xem thẻ thông tin; kéo quá ngưỡng = nhấc ghost.
+  // Trong lúc kéo, thẻ thông tin bị ẩn (che pad là lỗi P0 đã dính).
+  const DRAG_MIN = 7;   // px
+  let dragStart = null, dragging = false;
+
   function startDrag(e, id){
     const s = SIM.snapshot(sim);
     if (Object.values(s.pads).includes(id)) return;
     e.preventDefault();
-    picked = id; showInfo(id); refreshTray();
-    const gh = $('#ghost');
-    gh.innerHTML = `<g transform="translate(19,19)">${orgGlyph(id, 48)}</g>`;
-    gh.style.display = 'block';
-    moveGhost(e);
+    picked = id; dragging = false;
+    dragStart = { x: e.clientX, y: e.clientY };
+    if (e.target.setPointerCapture){ try { e.target.setPointerCapture(e.pointerId); } catch {} }
+    refreshTray();
     window.addEventListener('pointermove', moveGhost);
     window.addEventListener('pointerup', endDrag, { once:true });
+    window.addEventListener('pointercancel', cancelDrag, { once:true });
   }
   function moveGhost(e){
+    if (!picked) return;
+    if (!dragging){
+      if (Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y) < DRAG_MIN) return;
+      dragging = true;
+      hideInfo(); document.body.classList.add('dragging');
+      const gh = $('#ghost');
+      gh.innerHTML = `<g transform="translate(19,19)">${orgGlyph(picked, 48)}</g>`;
+      gh.style.display = 'block';
+    }
     const gh = $('#ghost');
     gh.style.left = e.clientX + 'px'; gh.style.top = e.clientY + 'px';
     document.querySelectorAll('.pad-hit').forEach(p => p.classList.remove('hot'));
@@ -937,13 +972,28 @@ const UI = (function(){
     if (pad && !s.pads[pad.dataset.pad]) pad.classList.add('hot');
   }
   function endDrag(e){
+    const wasDragging = dragging, id = picked;
+    teardownDrag();
+    if (!id) return;
+    if (wasDragging){
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const pad = el && el.closest && el.closest('.pad-hit');
+      picked = id;
+      if (pad) tryDrop(pad.dataset.pad);
+      picked = null;
+    } else {
+      showInfo(id);            // chạm không kéo → xem thẻ
+    }
+    refreshTray();
+  }
+  function cancelDrag(){ teardownDrag(); refreshTray(); }
+  function teardownDrag(){
     window.removeEventListener('pointermove', moveGhost);
+    window.removeEventListener('pointercancel', cancelDrag);
     $('#ghost').style.display = 'none';
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const pad = el && el.closest && el.closest('.pad-hit');
-    if (pad) tryDrop(pad.dataset.pad);
-    picked = null; refreshTray();
+    document.body.classList.remove('dragging');
     document.querySelectorAll('.pad-hit').forEach(p => p.classList.remove('hot'));
+    picked = null; dragging = false; dragStart = null;
   }
   function tryDrop(pid){
     if (!picked) return;
@@ -956,20 +1006,31 @@ const UI = (function(){
   }
 
   /* ---------- vòng lặp ---------- */
+  let doneTimer = null;   // hẹn giờ màn chốt — phải huỷ khi Dọn sàn / về Bản đồ
+  let acc = 0;   // bộ tích luỹ: phần dư mỗi khung được giữ lại, tốc độ sim
+                 // không phụ thuộc tần số quét màn hình (60/90/144Hz như nhau)
   function loop(ts){
     raf = requestAnimationFrame(loop);
     if (!auto){ return; }
     if (!lastTs) lastTs = ts;
-    let dt = Math.min(0.1, (ts - lastTs) / 1000);
+    acc += Math.min(0.1, (ts - lastTs) / 1000);
     lastTs = ts;
-    if (dt > 0){ SIM.step(sim, dt); handleEvents(); render(); }
+    const n = Math.floor(acc / SIM.SUB);
+    if (n > 0){
+      acc -= n * SIM.SUB;
+      SIM.step(sim, n * SIM.SUB);
+      handleEvents(); render();
+    }
   }
 
   /* ---------- điều hướng & nút ---------- */
+  let everStarted = false;
   function goPlay(){
     $('#scr-map').classList.remove('on');
     $('#scr-play').classList.add('on');
-    resetShift();
+    // giữ nguyên ca đang dở khi đảo qua bản đồ; chỉ dọn khi ca đã xong hoặc lần đầu
+    if (!everStarted || sim.done) resetShift();
+    everStarted = true;
   }
   function goMap(){
     SIM.setRun(sim, false); syncRunBtn();
@@ -977,6 +1038,7 @@ const UI = (function(){
     $('#scr-map').classList.add('on');
   }
   function resetShift(){
+    if (doneTimer){ clearTimeout(doneTimer); doneTimer = null; }
     sim = SIM.create();
     saidOnce.clear(); picked = null; playT0 = performance.now(); lastPadsKey = '__init__';
     buildScene(); buildTray(); hideInfo(); syncRunBtn(); render();
@@ -986,13 +1048,15 @@ const UI = (function(){
     $('#btnRun').textContent = sim.running ? '⏸ Tạm dừng' : '▶ Mở ca sáng';
   }
   function toggleRun(){
+    if (sim.done) return;        // hết ca thì nút chạy vô hiệu (kể cả Tab+Enter dưới modal)
     SIM.setRun(sim, !sim.running);
     if (sim.running) speak('Băng chuyền chạy! Nhìn kiện mARN từ nhân bò ra kìa.', 'run1');
     syncRunBtn();
   }
   function showDone(){
+    doneTimer = null;
     SIM.setRun(sim, false); syncRunBtn();
-    const secs = Math.round((performance.now() - playT0) / 1000);
+    const secs = Math.round(sim.runT);   // thời gian ca làm việc từ sim, không phải đồng hồ tường
     $('#doneTime').textContent = secs >= 60 ? Math.round(secs/60) + ' phút' : secs + ' giây';
     $('#debrief').textContent =
       'Thấy chưa — lúc kiện dồn cục là dây chuyền đang kể cho mình nghe nó thiếu gì. ' +
@@ -1028,7 +1092,8 @@ const UI = (function(){
   /* ---------- khởi động ---------- */
   $('#btnRun').addEventListener('click', toggleRun);
   $('#btnReset').addEventListener('click', resetShift);
-  window.addEventListener('keydown', e => { if (e.key === 'Escape'){ picked = null; refreshTray(); hideInfo(); } });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape'){ cancelDrag(); hideInfo(); } });
+  window.addEventListener('blur', cancelDrag);
   buildScene(); buildTray();
   raf = requestAnimationFrame(loop);
 
