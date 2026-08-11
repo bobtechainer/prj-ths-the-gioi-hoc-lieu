@@ -89,8 +89,10 @@
   .tcard small{color:var(--muted);font-weight:700}
   .tcard .tgo{margin-top:auto;background:var(--mc);color:#fff;border:2.5px solid var(--ink);
     border-radius:10px;padding:4px 12px;font-weight:800;font-size:13.5px}
-  .tcard .tstar{position:absolute;top:-11px;right:10px;background:var(--gold);border:2.5px solid var(--ink);
-    border-radius:99px;padding:2px 10px;font-size:11.5px;font-weight:800}
+  .tcard.locked{opacity:.55;cursor:default}
+  .tcard.locked:hover{transform:none;box-shadow:var(--sh)}
+  .tcard.locked:hover .tico{transform:none}
+  .tcard.locked .tgo{background:#cfc4ad}
   @keyframes cardpick{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(2deg)}100%{transform:scale(.9);opacity:.4}}
   .tcard.picked{animation:cardpick .3s ease forwards}
   /* nút lui/tiến nổi trên khu vườn — màn nào cũng phải có đường ra */
@@ -1487,12 +1489,17 @@ const UI = (function(){
     const box = $('#cardbox');
     box.innerHTML = TOPICS.map((t, i) => {
       if (curMon !== 'Tất cả' && t.mon !== curMon) return '';
-      return `<button class="tcard" style="--mc:${MON_COLOR[t.mon]}" onclick="UI.chooseTopic(${i}, this)">
-        ${t.game ? '<span class="tstar">★ có game mẫu</span>' : ''}
+      if (t.game) return `<button class="tcard" style="--mc:${MON_COLOR[t.mon]}" onclick="UI.chooseTopic(${i}, this)">
         <span class="tico">${t.ico}</span>
         <b>${t.hoi}</b>
         <small>${t.mon} · ${t.lop}</small>
         <span class="tgo">Đi thôi →</span>
+      </button>`;
+      return `<button class="tcard locked" style="--mc:${MON_COLOR[t.mon]}" disabled>
+        <span class="tico">${t.ico}</span>
+        <b>${t.hoi}</b>
+        <small>${t.mon} · ${t.lop}</small>
+        <span class="tgo">🔒 Chưa mở</span>
       </button>`;
     }).join('');
   }
