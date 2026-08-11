@@ -23,6 +23,9 @@ const { chromium } = require(path.join('c:/Trường học số - source code/pr
   await pg.evaluate(() => UI.gardenGo('dien'));
   await pg.waitForFunction(() => window.__state().screen === 'dien', null, { timeout: 9000 });
   await pg.waitForTimeout(600);
+  await shot('3-join');
+  await pg.click('.djoin-row .btn');            // 1 người — bác thợ giữ giúp
+  await pg.waitForTimeout(400);
   await shot('3-pho-toi');
 
   // 1) cầm bút thử, đo sau cầu chì B (ca 0 hỏng cầu chì B) → mất điện
@@ -43,13 +46,13 @@ const { chromium } = require(path.join('c:/Trường học số - source code/pr
   await pg.waitForTimeout(300);
   await shot('5-bi-giat');
 
-  // 3) ngắt cầu dao B → thay → bật lại → cả phố sáng
+  // 3) nhờ bác thợ ra GIỮ cầu dao B (lò xo) → thay → chạm lại cho bác buông → phố sáng
   await pg.locator('[data-act="br"][data-b="B"]').click({ force: true });
-  await pg.waitForFunction(() => window.__dstate().br.B === false, null, { timeout: 8000 });
+  await pg.waitForFunction(() => window.__dstate().br.B === false, null, { timeout: 12000 });
   await pg.locator('[data-comp="fuseB"]').click({ force: true });
-  await pg.waitForFunction(() => window.__dstate().swaps === 1, null, { timeout: 8000 });
+  await pg.waitForFunction(() => window.__dstate().swaps === 1, null, { timeout: 12000 });
   await pg.locator('[data-act="br"][data-b="B"]').click({ force: true });
-  await pg.waitForFunction(() => window.__dstate().win === true, null, { timeout: 8000 });
+  await pg.waitForFunction(() => window.__dstate().win === true, null, { timeout: 12000 });
   await pg.waitForTimeout(1300);
   await shot('6-thang-lythuyet');
   const st = await pg.evaluate(() => ({ d: window.__dstate(), s: window.__state().screen, mam: window.__state().mamStage }));
