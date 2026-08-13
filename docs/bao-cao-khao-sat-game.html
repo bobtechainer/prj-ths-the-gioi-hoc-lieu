@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo khảo sát công nghệ game — Thế Giới Học Liệu</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --ink:#22303c; --muted:#6b7a88; --line:#dfe5ea; --bg:#f7f8f9; --paper:#fff;
+    --accent:#2f6fbf; --warn:#b45309; --stop:#b42318; --ok:#0f7a4d;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font:16.5px/1.72 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{max-width:880px;margin:0 auto;background:var(--paper);padding:56px 60px 72px;
+    box-shadow:0 1px 3px rgba(30,45,60,.07),0 12px 36px rgba(30,45,60,.06)}
+  header{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:34px}
+  h1{font-size:29px;line-height:1.28;margin:0 0 10px;letter-spacing:-.02em}
+  .meta{color:var(--muted);font-size:14.5px}
+  .meta b{color:var(--ink);font-weight:600}
+  .ask{margin:20px 0 0;padding:14px 18px;background:#f2f6fa;border-left:3px solid var(--accent);
+    font-style:italic;color:#3d4d5c;font-size:15.5px}
+  h2{font-size:21px;margin:46px 0 14px;padding-top:8px;letter-spacing:-.01em}
+  h2:first-of-type{margin-top:34px}
+  h3{font-size:17px;margin:28px 0 10px;color:#33475a}
+  p{margin:0 0 14px}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin-bottom:7px}
+  table{width:100%;border-collapse:collapse;margin:8px 0 20px;font-size:15px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f4f6f8;font-weight:600;font-size:13.5px;letter-spacing:.02em;
+    text-transform:uppercase;color:#4a5b6b;border-bottom:2px solid var(--line)}
+  tbody tr:last-child td{border-bottom:1px solid var(--line)}
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .keyfig{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0 26px}
+  .keyfig div{flex:1;min-width:210px;border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:#fbfcfd}
+  .keyfig b{display:block;font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;margin-bottom:5px}
+  .keyfig span{font-size:14px;color:var(--muted);line-height:1.5;display:block}
+  .note{border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:0 8px 8px 0;
+    padding:14px 18px;margin:18px 0;background:#fafbfc;font-size:15.5px}
+  .note.warn{border-left-color:var(--warn);background:#fffaf3}
+  .note.stop{border-left-color:var(--stop);background:#fff6f5}
+  .note.ok{border-left-color:var(--ok);background:#f4fbf7}
+  .note p:last-child{margin-bottom:0}
+  .note .lbl{display:block;font-size:12.5px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .note.warn .lbl{color:var(--warn)} .note.stop .lbl{color:var(--stop)} .note.ok .lbl{color:var(--ok)}
+  code{background:#f0f3f6;padding:1.5px 6px;border-radius:4px;font-size:13.5px;
+    font-family:"Cascadia Mono",Consolas,monospace}
+  pre{background:#22303c;color:#e6edf3;padding:15px 18px;border-radius:8px;overflow-x:auto;
+    font-size:13.5px;line-height:1.65;margin:8px 0 18px;
+    font-family:"Cascadia Mono",Consolas,monospace}
+  pre code{background:none;padding:0;color:inherit;font-size:inherit}
+  .diagram{background:#f4f6f8;border:1px solid var(--line);border-radius:8px;padding:18px 20px;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13.5px;line-height:1.75;
+    white-space:pre;overflow-x:auto;margin:8px 0 20px;color:#3d4d5c}
+  .yes{color:var(--ok);font-weight:600} .no{color:var(--stop);font-weight:600}
+  .maybe{color:var(--warn);font-weight:600}
+  .toc{background:#f4f6f8;border-radius:10px;padding:18px 24px;margin-bottom:8px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:34px}
+  .toc li{margin-bottom:5px}
+  .toc a{color:#3d4d5c;text-decoration:none} .toc a:hover{color:var(--accent);text-decoration:underline}
+  footer{margin-top:52px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:14px;color:var(--muted)}
+  footer a{color:var(--accent)}
+  .src{font-size:14px;color:var(--muted);line-height:1.8}
+  .src a{color:var(--accent);text-decoration:none} .src a:hover{text-decoration:underline}
+  @media (max-width:720px){
+    .sheet{padding:34px 22px 50px}
+    h1{font-size:24px} .toc ol{columns:1}
+    table{font-size:14px} th,td{padding:7px 8px}
+  }
+  @media print{
+    body{background:#fff} .sheet{box-shadow:none;max-width:100%;padding:0}
+    h2{page-break-after:avoid} table,.note,.keyfig{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<header>
+  <h1>Khảo sát công nghệ game: nên sưu tầm, nên đổi engine, hay nên sửa cái đang có</h1>
+  <p class="meta">Dự án <b>Thế Giới Học Liệu</b> · ngày <b>13/08/2026</b> · 9 mũi khảo sát độc lập<br>
+  Số liệu tra trực tiếp từ GitHub API, npm registry và trang chính chủ, không lấy từ trí nhớ.</p>
+  <p class="ask">“Liệu có cách nào sưu tầm game rồi phát triển từ đó thay vì tự code như bây giờ không?
+  Engine đồ hoạ đang khá xấu và không fun.”</p>
+</header>
+
+<div class="toc">
+  <ol>
+    <li><a href="#s1">Ba con số quyết định</a></li>
+    <li><a href="#s2">Hai bệnh khác nhau</a></li>
+    <li><a href="#s3">Việc nên làm tuần này</a></li>
+    <li><a href="#s4">Chuyện đổi engine</a></li>
+    <li><a href="#s5">Fork được ở đâu, không được ở đâu</a></li>
+    <li><a href="#s6">Bài toán thật: 360 game</a></li>
+    <li><a href="#s7">Công cụ AI sinh game</a></li>
+    <li><a href="#s8">Những chỗ dễ vướng luật</a></li>
+    <li><a href="#s9">Cách tìm và thẩm định</a></li>
+    <li><a href="#s10">Tóm lại</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Ba con số quyết định</h2>
+
+<p>Trước khi bàn nên làm gì, đây là ba con số đo được. Chúng quyết định gần như toàn bộ phần còn lại
+của báo cáo.</p>
+
+<div class="keyfig">
+  <div><b>111</b><span>game còn lại sau khi lọc 3.187 game trong kho OSGameClones xuống còn thứ chạy web và có giấy phép cho phép bán</span></div>
+  <div><b>3</b><span>trong số 111 game đó còn đang được phát triển. 58% đã dừng hẳn</span></div>
+  <div><b>49,6%</b><span>repo game HTML5 trên GitHub không ghi giấy phép nào, tức là không được phép dùng</span></div>
+</div>
+
+<p>Nói gọn: kho “ba nghìn game mã nguồn mở” nghe rất nhiều, nhưng lọc đến cuối chỉ còn khoảng ba game
+còn sống mà đội được phép dùng để bán. Ý tưởng sưu tầm game rồi phát triển tiếp nghe hợp lý, nhưng
+số liệu không ủng hộ nó ở quy mô đội đang hình dung.</p>
+
+<h2 id="s2">2. Hai bệnh khác nhau, và cả hai đều không phải bệnh công nghệ</h2>
+
+<p>Đội mô tả game “xấu và không fun”. Đó là hai chuyện riêng, chữa bằng hai cách khác nhau.</p>
+
+<p><b>Xấu</b> — không phải vì dùng SVG. SVG vẽ đẹp được. Nó xấu vì mỗi hình một bảng màu, mỗi hình
+một độ dày nét, không có hệ thống nào ràng chúng lại. Đổi sang engine khác mà vẫn vẽ theo lối cũ thì
+vẫn xấu y hệt.</p>
+
+<p><b>Không fun</b> — chuyện này không nằm ở đồ hoạ. Cảm giác vui đến từ phản hồi: có tiếng khi bấm,
+vật thể nhún một cái khi đặt xuống, màn hình khựng lại một nhịp đúng khoảnh khắc quyết định, con số
+nảy lên tại chỗ. Game xấu mà có những thứ đó vẫn vui. Game đẹp mà khô cứng vẫn chán.</p>
+
+<div class="note ok">
+  <span class="lbl">Điều đáng chú ý nhất</span>
+  <p>Ba mũi khảo sát độc lập nhau, hỏi ba câu khác nhau, cùng chỉ về một chỗ. Mũi so sánh engine viết
+  thẳng: <i>“engine không phải thứ quyết định game đẹp hay xấu — đội đang quy sai nguyên nhân.”</i>
+  Mũi mỹ thuật kết luận: <i>“không thiếu tài sản, thiếu chỉ đạo mỹ thuật.”</i> Mũi cảm giác chơi thì
+  nói vui đến từ phản hồi chứ không từ hình ảnh. Ba agent không biết nhau, cùng một câu trả lời.</p>
+</div>
+
+<h2 id="s3">3. Việc nên làm tuần này, chưa đụng gì tới công nghệ</h2>
+
+<h3>Khoá chỉ đạo mỹ thuật — nửa ngày, làm một lần cho cả dự án</h3>
+
+<ul>
+  <li>Chọn <b>sáu màu</b> rồi ghi thành mã màu cố định. Một màu chủ đạo chiếm 40–60% diện tích.</li>
+  <li>Chốt <b>ba con số</b>: độ dày nét, bán kính bo góc, lưới cơ sở. Mọi khoảng cách là bội số của 8.</li>
+  <li>Viết một đoạn script ép toàn bộ hình về đúng sáu màu đó. Viết một lần, chạy lại vô hạn.</li>
+  <li>Đổi viền đen thuần <code>#000</code> sang màu tối cùng tông với vật thể. Lá cây xanh thì viền
+  xanh đậm. Nét đen thuần làm hình trông như hình cắt dán.</li>
+  <li>Phủ một lớp nhiễu hạt 6–10% lên toàn cảnh. Hình phẳng tuyệt đối luôn trông rẻ tiền.</li>
+</ul>
+
+<p>Lỗi phá hỏng nhiều nhất mà cũng dễ sửa nhất: hình này viền rỗng, hình kia tô đặc, đặt cạnh nhau.
+Chọn một kiểu rồi giữ nguyên.</p>
+
+<h3>Năm việc về cảm giác chơi — khoảng hai giờ</h3>
+
+<table>
+  <thead><tr><th>Việc</th><th>Thời gian</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Âm thanh cho mọi thao tác</td><td class="num">30 phút</td>
+      <td>Hiệu quả cao nhất trong tất cả. Nhớ biến tấu cao độ ±7% mỗi lần phát, không thì nghe hai
+      chục lần là chán.</td></tr>
+    <tr><td>Nhún nảy khi bấm, nhặt, đặt</td><td class="num">20 phút</td>
+      <td>Bẹt xuống 0.88 rồi bật lên 1.06 rồi về 1. Chỉ cần CSS.</td></tr>
+    <tr><td>Đóng băng 90 mili giây</td><td class="num">15 phút</td>
+      <td>Dừng toàn bộ chuyển động ở khoảnh khắc quyết định rồi chạy tiếp. Rẻ nhất, ít người làm nhất.</td></tr>
+    <tr><td>Rung màn có xoay</td><td class="num">30 phút</td>
+      <td>Bắt buộc có thành phần xoay 0,5–1,2 độ. Thiếu xoay thì não đọc ra “màn hình bị lag”, có xoay
+      thì đọc ra “bị đấm”. Dùng nhiễu mượt, đừng dùng số ngẫu nhiên thuần.</td></tr>
+    <tr><td>Số nảy lên tại chỗ</td><td class="num">30 phút</td>
+      <td>Kèm lệch ngang ngẫu nhiên để nhiều số không chồng dính.</td></tr>
+  </tbody>
+</table>
+
+<div class="note warn">
+  <span class="lbl">Ba điều riêng cho học liệu</span>
+  <p>Đừng rung màn khi học sinh trả lời sai. Rung là trừng phạt. Sai nên lắc ngang nhẹ kèm tiếng trầm ngắn.</p>
+  <p>Phải có nhánh tắt toàn bộ hiệu ứng chuyển động cho ai bật chế độ giảm chuyển động trên máy. Rung
+  màn gây chóng mặt buồn nôn cho một tỉ lệ học sinh không nhỏ.</p>
+  <p>Trình duyệt chặn âm thanh cho tới khi người dùng chạm lần đầu. Quên xử lý là game im lặng hoàn
+  toàn mà không báo lỗi gì. Đây là lỗi hay gặp nhất khi thêm âm thanh vào web.</p>
+</div>
+
+<h3>Bộ thư viện tối thiểu</h3>
+
+<table>
+  <thead><tr><th>Thư viện</th><th>Nặng</th><th>Giấy phép</th><th>Làm việc gì</th></tr></thead>
+  <tbody>
+    <tr><td>Howler.js</td><td class="num">7,7 KB</td><td>MIT</td>
+      <td>Âm thanh: gộp một tệp, mở khoá tự phát, phát chồng không cắt nhau</td></tr>
+    <tr><td>anime.js v4</td><td class="num">39 KB</td><td>MIT</td>
+      <td>Chuyển động, độ mượt, lò xo, lệch nhịp</td></tr>
+    <tr><td>canvas-confetti</td><td class="num">4,3 KB</td><td>ISC</td>
+      <td>Pháo giấy lúc hoàn thành</td></tr>
+    <tr><td>Tự viết một tệp ~120 dòng</td><td class="num">~1 KB</td><td>của đội</td>
+      <td>Rung màn, đóng băng, số nảy. Không thư viện nào đáng dùng cho ba thứ này</td></tr>
+  </tbody>
+</table>
+
+<p>Tổng khoảng 52 KB. Về âm thanh thì lấy bộ Kenney: 280 tiếng trong ba gói, giấy phép CC0, không
+phải ghi công. Chuyện giấy phép này đã được ba mũi khảo sát khác nhau xác nhận, trong đó một mũi mở
+kiểm tra 68 bộ.</p>
+
+<div class="note">
+  <span class="lbl">Về GSAP</span>
+  <p>GSAP đúng là miễn phí từ 2025 sau khi Webflow mua lại, kể cả các phần trước đây thu tiền. Nhưng
+  nó không phải mã nguồn mở theo chuẩn quốc tế — nếu đội có quy trình duyệt thư viện chỉ nhận MIT hay
+  Apache thì nó bị chặn dù miễn phí. anime.js v4 làm được 95% việc, giấy phép sạch hơn.</p>
+</div>
+
+<h2 id="s4">4. Chuyện đổi engine</h2>
+
+<p>Nếu vẫn quyết đổi thì <b>Phaser 4</b>. Lý do không phải hiệu năng — game vài trăm vật thể thì
+engine nào cũng thừa sức. Lý do là nó có sẵn khuôn dự án Next.js chính thức, kèm cầu nối hai chiều
+giữa React và game. Không engine JavaScript nào khác có thứ này. Cộng thêm 13 bộ lọc dựng sẵn như
+loé sáng, đổ bóng, tối viền — bật vài dòng là hình phẳng trông có đầu tư.</p>
+
+<table>
+  <thead><tr><th>Engine</th><th>Nặng (nén)</th><th>Giấy phép</th><th>Nhận xét</th></tr></thead>
+  <tbody>
+    <tr><td><b>Phaser 4</b></td><td class="num">361 KB</td><td>MIT</td>
+      <td class="yes">Khuyến nghị. Có khuôn Next.js chính thức. Nhưng không cắt gọt được — coi 361 KB
+      là chi phí cố định.</td></tr>
+    <tr><td>Excalibur</td><td class="num">124 KB</td><td>BSD</td>
+      <td>Nhẹ hơn, viết bằng TypeScript, nhưng chưa ra bản 1.0 sau nhiều năm và không có khuôn React.</td></tr>
+    <tr><td>PixiJS</td><td class="num">162 KB</td><td>MIT</td>
+      <td>Chỉ là lớp vẽ, không phải engine. Chọn nó là tự ghép lấy phần còn lại.</td></tr>
+    <tr><td>KAPLAY</td><td class="num">69 KB</td><td>MIT</td>
+      <td class="maybe">Nhẹ nhất nhưng bản ổn định đứng yên 14 tháng. Hợp thi làm game nhanh, không
+      hợp sản phẩm bảo trì nhiều năm.</td></tr>
+    <tr><td>Godot 4 xuất web</td><td class="num">6.800 KB</td><td>MIT</td>
+      <td class="no">Loại. Xem bên dưới.</td></tr>
+  </tbody>
+</table>
+
+<div class="note stop">
+  <span class="lbl">Vì sao Godot bị loại</span>
+  <p>Tệp chạy rỗng đã nặng 37,7 MB, nén còn 6,8 MB — nặng gấp mười chín lần Phaser khi game còn chưa
+  có gì. Trên mạng 4G phổ thông ở Việt Nam đó là vài chục giây nhìn màn hình trắng.</p>
+  <p>Nhưng thứ chặn hẳn là ngôn ngữ: tài liệu chính thức ghi rõ <b>dự án viết bằng C# không xuất được
+  ra web</b>. Nghĩa là kể cả đội chịu học một ngôn ngữ mới thì đường đó vẫn đóng, chỉ còn GDScript.</p>
+  <p>Thêm nữa đang có nhóm lỗi chưa vá: Safari trên iOS sập cả trang sau mười tới ba mươi phút chơi
+  khi có âm thanh. Mà trên iPad thì mọi trình duyệt đều chạy nhân Safari, không có đường vòng.</p>
+</div>
+
+<h3>Construct 3 — số liệu đã tra kỹ lại</h3>
+
+<table>
+  <thead><tr><th>Gói</th><th>Giá mỗi năm</th><th>Ai mua được</th></tr></thead>
+  <tbody>
+    <tr><td>Miễn phí</td><td class="num">0</td>
+      <td class="no">Giới hạn 50 sự kiện, 2 lớp. Cấm mọi hình thức kiếm tiền, <b>kể cả bán khoá học
+      dựa trên nó</b>. Không dùng được cho việc này.</td></tr>
+    <tr><td>Cá nhân</td><td class="num">129,99 đô</td>
+      <td>Chỉ cá nhân. Ghi rõ: tổ chức doanh nghiệp bị cấm mua gói này.</td></tr>
+    <tr><td>Doanh nghiệp mới</td><td class="num">168,99 đô/chỗ</td>
+      <td>Chỉ khi doanh thu dưới 50 nghìn đô, tài sản dưới 100 nghìn đô, từ 3 nhân sự trở xuống.</td></tr>
+    <tr><td>Doanh nghiệp</td><td class="num">468,99 đô/chỗ</td><td>Mức thường cho công ty.</td></tr>
+    <tr><td>Giáo dục</td><td class="num">32,99 đô/chỗ</td>
+      <td class="maybe">Rẻ nhất, giảm còn 9,90 đô nếu mua từ 51 chỗ. Nhưng chỉ cấp cho <b>tổ chức giáo
+      dục mà người dùng cuối là học sinh</b> — đội là công ty bán cho trường, khả năng không đủ điều
+      kiện. Nên hỏi thẳng họ trước.</td></tr>
+  </tbody>
+</table>
+
+<p>Điểm mạnh thật của Construct: xuất ra gói tĩnh chỉ khoảng 300 KB, tự host thoải mái, không thu phần
+trăm doanh thu, hỗ trợ TypeScript tốt hơn tôi tưởng, và có cách làm việc với git nếu lưu dự án dạng
+thư mục.</p>
+
+<div class="note warn">
+  <span class="lbl">Cái khoá của Construct nằm ở chỗ khác, không phải tiền</span>
+  <p>Ngừng trả tiền thì game đã xuất vẫn chạy và vẫn bán được, nhưng <b>không mở lại dự án để sửa hay
+  xuất lại được nữa</b>. Với học liệu phải bảo trì nhiều năm cho trường, đó là khoản chi vĩnh viễn
+  chứ không phải mua một lần. Thêm nữa dự án Construct khó xem xét và gộp qua git như tệp mã thường,
+  và kỹ năng TypeScript sẵn có của đội gần như không dùng lại được vào bảng sự kiện.</p>
+</div>
+
+<h3>Nếu quyết chuyển thì làm thế nào</h3>
+
+<p>Ước tính chuyển một game 1.500 dòng: <b>16–25 ngày công</b>, tức ba tới năm tuần một người. Tin
+tốt là khoảng <b>40–50% mã sống sót</b> — lõi mô phỏng của cả ba game hiện tại đều là hàm thuần,
+không dính đồ hoạ, bê nguyên sang được. Phần vứt đi là lớp vẽ và lớp chạm.</p>
+
+<div class="note ok">
+  <span class="lbl">Lời khuyên thực tế nhất trong cả báo cáo</span>
+  <p>Đừng bắt đầu bằng việc chuyển game 1.500 dòng. Làm một bản thử hai tới ba ngày với đúng một băng
+  chuyền, một máy, một kiện hàng. Rồi đem chạy trên <b>chiếc máy tính bảng rẻ nhất mà học sinh thật
+  sự dùng</b>, không phải máy của lập trình viên. Đạt thì làm tiếp, không đạt thì mất ba ngày thay vì
+  bốn tuần.</p>
+</div>
+
+<h2 id="s5">5. Fork được ở đâu, không được ở đâu</h2>
+
+<table>
+  <thead><tr><th>Thể loại</th><th>Fork được?</th><th>Ứng viên</th><th>Công</th></tr></thead>
+  <tbody>
+    <tr><td>Suy luận, bản đồ</td><td class="yes">Được</td>
+      <td><code>geoguess-lite</code> — MIT</td><td class="num">2–4 tuần</td></tr>
+    <tr><td>Hợp tác nhiều người</td><td class="maybe">Được, phải làm lại nhiều</td>
+      <td><code>overcooked_ai</code> — MIT cả mã lẫn hình</td><td class="num">2–6 tuần</td></tr>
+    <tr><td>Dây chuyền, nhà máy</td><td class="no">Không có hàng</td>
+      <td>Tự viết</td><td class="num">4–8 tuần</td></tr>
+  </tbody>
+</table>
+
+<p><b>geoguess-lite</b> là ứng viên tốt nhất, và lý do không phải số sao. Nó dùng đúng bộ công nghệ
+đội đã có: Vue 3, TypeScript, Tailwind 4, reka-ui — chính là shadcn-vue mà dự án
+<code>prj-gkebook-shadcn-frontend</code> đang chạy. Lập trình viên nhảy vào là code được ngay. Nó
+cũng đã tránh sẵn dịch vụ ảnh đường phố của Google nên không dính tiền theo lượt. Mà hay hơn nữa: nếu
+bỏ luôn phần ảnh đường phố, thay khung ảnh bằng khung manh mối, thì hết sạch mọi ràng buộc về ảnh —
+và đó chính là game Đoàn khảo sát đội đang có.</p>
+
+<p><b>overcooked_ai</b> là thứ duy nhất có giấy phép MIT sạch cho cả mã lẫn hình. Màn chơi là 49 tệp
+văn bản thuần, đổi màn chỉ là sửa vài dòng chữ. Nó còn sẵn một màn tên “lợi thế bất đối xứng”, đúng
+tinh thần một người giữ cầu dao cho người kia thay đồ.</p>
+
+<div class="note stop">
+  <span class="lbl">Chuyện shapez.io — nếu ai trong đội đang trông vào nó</span>
+  <p>Không fork được. Hiện tại là GPL-3.0. Và giai đoạn trước năm 2020 cũng không phải MIT thuần mà
+  là <b>MIT kèm điều khoản cấm bán</b>. Dòng ghi “MIT” còn sót trong tệp cấu hình là rác, không có
+  giá trị pháp lý. Cả bản cộng đồng lẫn shapez 2 đều không dùng được.</p>
+  <p>Danh sách tổng hợp cả thể loại này chỉ liệt kê được hai game mã nguồn mở — Mindustry và shapez —
+  và cả hai đều GPL.</p>
+</div>
+
+<div class="note ok">
+  <span class="lbl">Lối thoát hợp pháp cho thể loại dây chuyền</span>
+  <p>Cơ chế chơi không được bảo hộ bản quyền. Chỉ mã nguồn và hình ảnh mới được. Đội hoàn toàn có
+  quyền làm một game băng chuyền giống hệt về lối chơi.</p>
+  <p>Nhưng phải thành kỷ luật: <b>tuyệt đối không mở mã nguồn của họ ra vừa xem vừa gõ</b>. Làm vậy
+  là tạo tác phẩm phái sinh và dính GPL ngay. Cách đúng là chơi bản web miễn phí để cả đội thống nhất
+  cảm giác muốn có, rồi tự viết từ đầu.</p>
+</div>
+
+<h2 id="s6">6. Bài toán thật không phải bài toán engine</h2>
+
+<p>Mười hai môn nhân ba mươi chủ đề là 360 game. Không công cụ nào cứu được con số đó, kể cả công cụ
+AI sinh game — vì 360 game sinh bằng AI là 360 bộ mã phải bảo trì, mà chi phí bảo trì mã do AI sinh
+tăng gấp ba sau mười tám tháng.</p>
+
+<p>Cách đúng là tách nội dung ra khỏi cơ chế chơi:</p>
+
+<div class="diagram">12–15 khuôn game        làm kỹ, làm đẹp một lần
+        ↑
+        │ nạp nội dung lúc chạy
+        │
+   Kho nội dung         giáo viên tự nhập, không cần lập trình viên
+        ↓
+360 bài học = 15 khuôn × 24 bộ nội dung</div>
+
+<p>Ba game hiện tại đã làm đúng một nửa việc này rồi — lõi mô phỏng của cả ba đều đọc dữ liệu chứ
+không viết cứng. Chỉ cần đẩy nốt phần nội dung ra ngoài là thành khuôn dùng lại được.</p>
+
+<p>Nói cách khác: <b>360 game là bài toán kho nội dung, không phải bài toán engine game.</b> Và AI
+lúc đó dùng vào đúng chỗ nó mạnh — dựng nhanh 15 khuôn ban đầu — thay vì sinh ra 360 thứ phải nuôi.</p>
+
+<h2 id="s7">7. Công cụ AI sinh game</h2>
+
+<p>Đây là mảng thay đổi nhanh nhất, và cũng là mảng nhiều đồn thổi nhất. Tôi cho tra riêng hai mũi.
+Kết quả gọn: đã qua giai đoạn đồ chơi, nhưng chưa tới mức bàn giao được sản phẩm bán cho trường.</p>
+
+<h3>Tín hiệu đáng chú ý nhất</h3>
+
+<div class="note ok">
+  <span class="lbl">Chính các hãng làm công cụ đã kết luận điều này</span>
+  <p>Trong năm 2026, <b>Phaser, Roblox và Ludo.ai đều tự làm cầu nối để công cụ của họ được điều khiển
+  từ Claude Code, Cursor và các trợ lý lập trình thông thường.</b> Phaser ghi thẳng trên trang chủ:
+  “dùng trợ lý của chúng tôi, hoặc điều khiển nó từ công cụ lập trình bạn đã trả tiền.”</p>
+  <p>Nói cách khác, hướng đi không phải là tìm một công cụ sinh game riêng, mà là <b>dùng trợ lý lập
+  trình sẵn có kết hợp với engine mã nguồn mở</b> — đúng cách đội đang làm. Điều này cũng cho kết quả
+  sạch nhất về quyền sở hữu, vì mã nằm trên ổ đĩa của đội, không có gì để bị khoá.</p>
+</div>
+
+<h3>Xếp hạng theo tiêu chí của đội: xuất ra được, tự host được, sở hữu được</h3>
+
+<table>
+  <thead><tr><th>Công cụ</th><th>Xuất ra tự host</th><th>Ai sở hữu</th><th>Giá</th></tr></thead>
+  <tbody>
+    <tr><td><b>Trợ lý lập trình + engine mã nguồn mở</b></td>
+      <td class="yes">Hoàn toàn — tệp nằm trên máy đội</td><td class="yes">Của đội</td>
+      <td>Gói đang dùng</td></tr>
+    <tr><td><b>Phaser Game Agent</b> (ra tháng 7/2026)</td>
+      <td class="yes">Có — gói HTML5 nén, host ở đâu tuỳ ý</td>
+      <td class="yes">Hãng ghi rõ “game thuộc về bạn”</td>
+      <td class="num">10–250 đô theo gói tín dụng</td></tr>
+    <tr><td>Ludo.ai — chỉ dùng làm hình ảnh</td>
+      <td class="yes">Có — PNG, spritesheet, mô hình 3D</td>
+      <td class="maybe">Được cấp quyền thương mại, không phải chuyển giao sở hữu</td>
+      <td class="num">42 đô/tháng gói Pro</td></tr>
+    <tr><td>Rosebud AI</td><td class="no">Không tìm thấy đường xuất</td>
+      <td class="no">Hãng sở hữu kết quả</td><td>Không công khai</td></tr>
+    <tr><td>Roblox</td><td class="no">Không rời khỏi nền tảng được</td>
+      <td class="no">Hạn chế nặng</td><td>Miễn phí giai đoạn thử</td></tr>
+    <tr><td>Astrocade</td><td class="no">Chặn thẳng việc tải hình về</td>
+      <td class="no">Không tìm được điều khoản công khai</td><td>Không công bố</td></tr>
+    <tr><td>Buildbox</td><td class="maybe">Chỉ xác nhận iOS, Android, PC — web chưa rõ</td>
+      <td class="maybe">Không trích được điều khoản</td><td class="num">10–575 đô/năm</td></tr>
+  </tbody>
+</table>
+
+<p><b>Phaser Game Agent</b> là thứ đáng thử nhất trong nhóm này, vì nó là công cụ duy nhất vừa nói rõ
+game thuộc về người dùng, vừa xuất ra gói HTML5 host được trên máy chủ riêng. Nó cũng cắm được vào
+trợ lý lập trình đội đang dùng. Một điểm chưa rõ cần hỏi trước khi trả tiền: <b>mã trong gói xuất ra
+là mã đọc được hay đã bị rút gọn</b> — tài liệu của họ không nói.</p>
+
+<div class="note stop">
+  <span class="lbl">Ba cái bẫy khoá cần tránh</span>
+  <p><b>Rosebud AI</b> — điều khoản mục 4(b) ghi nguyên văn rằng hãng <b>sở hữu mọi dữ liệu, nội dung,
+  mã và hình ảnh</b> sinh ra từ câu lệnh. Gói trả phí chỉ cấp quyền thương mại hoá, không chuyển quyền
+  sở hữu. Bản miễn phí cấm cả dùng nội bộ doanh nghiệp. Nội dung của đội còn bị dùng để huấn luyện
+  mô hình của họ, không có cách từ chối.</p>
+  <p><b>Roblox Cube</b> — thông cáo báo chí nói mô hình này “dùng được cho bất kỳ ai, trong hay ngoài
+  nền tảng Roblox”. Nhưng tệp giấy phép thật trong kho mã ghi <b>chỉ dành cho nghiên cứu học thuật</b>.
+  Hai thứ mâu thuẫn nhau. Đừng xây sản phẩm thương mại lên đó nếu chưa hỏi luật sư.</p>
+  <p><b>Astrocade</b> — blog chính thức của họ viết thẳng: “nền tảng của chúng tôi không cho phép người
+  dùng tải trực tiếp các tài sản do mô hình sinh ra”. Không có đường xuất nào. Và không tìm được trang
+  điều khoản công khai — mọi địa chỉ thông thường đều báo lỗi.</p>
+</div>
+
+<h3>Vài thứ nghe nhiều nhưng không dùng được</h3>
+
+<ul>
+  <li><b>Genie 3 của DeepMind</b> — chỉ tải được video sáu mươi giây. Không mã, không game.</li>
+  <li><b>Muse của Microsoft</b> — vẫn là dự án nghiên cứu. Giấy phép mô hình ghi rõ không được dùng để
+  sinh hình ảnh ngoài một tựa game cụ thể của họ. Và Microsoft đã dừng phát triển trợ lý AI cho máy
+  chơi game vào tháng 5/2026.</li>
+  <li><b>Unity Muse</b> — đã ngừng từ 1/10/2025, thay bằng Unity AI đi kèm gói thuê bao. Gói Pro
+  210 đô mỗi tháng. Chuyện ai sở hữu kết quả thì trang pháp lý của Unity chặn truy cập tự động, chưa
+  xác minh được.</li>
+</ul>
+
+<h3>Cái giá dài hạn ít người tính</h3>
+
+<table>
+  <thead><tr><th>Chỉ số</th><th>Số liệu</th></tr></thead>
+  <tbody>
+    <tr><td>Nợ kỹ thuật sau khi nhóm dùng công cụ AI (phân tích 8,1 triệu lượt gộp mã)</td>
+      <td class="num">tăng 30–41%</td></tr>
+    <tr><td>Chi phí bảo trì mã do AI sinh, sau 18 tháng</td><td class="num">tăng gấp ba</td></tr>
+    <tr><td>Tỉ lệ mã do AI sinh có lỗ hổng bảo mật</td><td class="num">gần 50%</td></tr>
+  </tbody>
+</table>
+
+<p>Đội đang than chậm và xấu. Sinh mã bằng AI chữa được cái chậm trong ba tháng đầu, rồi trả lại gấp
+ba ở tháng thứ mười tám. Nếu định nhân ra nhiều môn và nuôi trong nhiều năm, đây đúng là loại chi phí
+sẽ giết dự án. Cách dùng đúng là để AI dựng nhanh mười lăm khuôn ban đầu, rồi người sửa kỹ — không
+phải sinh ra ba trăm sáu mươi thứ rồi nuôi cả ba trăm sáu mươi.</p>
+
+<div class="note warn">
+  <span class="lbl">Một bẫy rất Việt Nam</span>
+  <p>Phaser dùng phông chữ dạng ảnh thì phải nạp thêm khoảng 134 ký tự có dấu. Mã do AI sinh gần như
+  luôn lấy phông mặc định tiếng Anh — lúc demo thì đẹp, đổ nội dung thật vào là vỡ chữ. Phải kiểm
+  ngay ở khuôn đầu tiên, đừng để phát hiện lúc bàn giao.</p>
+</div>
+
+<h2 id="s8">8. Những chỗ dễ vướng luật</h2>
+
+<h3>Chạy trên web không cứu được giấy phép GPL</h3>
+
+<p>Nhiều người tin rằng phần mềm chạy trên web thì không phải công bố mã. Với máy chủ thì đúng. Với
+game HTML5 thì sai, và cái sai này nghiêm trọng.</p>
+
+<p>Game HTML5 không chạy trên máy chủ của đội. Nó chạy trong trình duyệt học sinh. Muốn chạy được thì
+máy chủ <b>phải gửi toàn bộ tệp JavaScript xuống máy người dùng</b>. Gửi mã xuống máy người khác
+chính là hành vi phân phối, và đó là thứ kích hoạt nghĩa vụ của GPL.</p>
+
+<table>
+  <thead><tr><th>Kiến trúc</th><th>GPL kích hoạt?</th><th>Hệ quả</th></tr></thead>
+  <tbody>
+    <tr><td>Máy chủ dùng thư viện GPL, chỉ chạy nội bộ</td><td class="yes">Không</td><td>An toàn</td></tr>
+    <tr><td>Game HTML5 gửi xuống trình duyệt</td><td class="no">Có</td>
+      <td>Phải công bố toàn bộ mã cho từng trường mua sản phẩm</td></tr>
+  </tbody>
+</table>
+
+<p>Nén hay rút gọn mã không cứu được, vì GPL đòi mã nguồn ở dạng dùng để chỉnh sửa, tức là mã trước
+khi rút gọn. Với game web, GPL hành xử gần như AGPL.</p>
+
+<p>Chưa có án lệ Việt Nam về điểm này. Nếu đội vẫn muốn dùng mã GPL thì đây là chỗ bắt buộc phải hỏi
+luật sư, không tự quyết được.</p>
+
+<h3>Không ghi giấy phép nghĩa là không được dùng</h3>
+
+<p>Mặc định, tác phẩm sáng tạo thuộc bản quyền độc quyền của tác giả. Điều khoản của GitHub chỉ cho
+phép xem và fork trong nội bộ GitHub, không cho sửa, đóng gói và bán. Mức độ phổ biến đã đo:
+gần một nửa repo game HTML5 và hơn ba phần tư repo của cuộc thi js13kGames rơi vào diện này.</p>
+
+<p>Các cuộc thi làm game cho <b>mã nguồn</b>, không cho <b>quyền</b>. Ludum Dare bắt nộp mã nhưng ghi
+rõ không bắt phát hành dưới dạng phần mềm tự do. GitHub Game Off thì ghi thẳng: mở mã là khuyến
+khích, không bắt buộc.</p>
+
+<h3>Bẫy tệp giấy phép thứ hai</h3>
+
+<p>Ba trong bốn ứng viên đẹp nhất tìm được đều có một tệp giấy phép riêng khoá phần hình ảnh. GitHub
+chỉ hiện một nhãn duy nhất.</p>
+
+<table>
+  <thead><tr><th>Repo</th><th>Nhãn trên GitHub</th><th>Thực tế</th></tr></thead>
+  <tbody>
+    <tr><td>moorestech</td><td>Apache-2.0</td>
+      <td class="no">Tệp riêng khoá toàn bộ hình, âm thanh, giao diện và cả dữ liệu game</td></tr>
+    <tr><td>starship-olympics</td><td>MIT</td><td class="no">Hình là CC-BY-NC-SA, cấm thương mại</td></tr>
+    <tr><td>fishfolk/jumpy</td><td>MIT/Apache</td><td class="no">Hình là CC-BY-NC, cấm thương mại</td></tr>
+    <tr><td>DrillDown</td><td>Apache-2.0</td>
+      <td class="no">Ghi chú credits nói rõ “bảo lưu mọi quyền”, hình là đồ đi mượn</td></tr>
+  </tbody>
+</table>
+
+<p>Lệnh chạy ngay sau khi tải repo về, mất mười giây và cứu được cả dự án:</p>
+<pre><code>find . -iname "*LICEN[SC]E*" -o -iname "*COPYING*" \
+       -o -iname "*NOTICE*" -o -iname "*CREDITS*" | grep -v node_modules</code></pre>
+<p>Ra nhiều hơn một tệp nghĩa là giấy phép hỗn hợp, phải đọc từng cái.</p>
+
+<h3>Tên game vẫn được bảo hộ dù mã mở</h3>
+
+<p>Giấy phép mã nguồn mở chỉ cấp quyền về bản quyền, không cấp quyền về nhãn hiệu. Ví dụ rất sát:
+trong danh sách lọc ra có mục “Javascript Tetris”, mã MIT, fork thoải mái. Nhưng “Tetris” là nhãn
+hiệu đã đăng ký và chủ sở hữu thực thi rất gắt — họ đã gỡ “Setris” và “Playtris” khỏi itch.io chỉ vì
+tên gần giống. Lấy được mã, không lấy được tên.</p>
+
+<h3>Hai văn bản Việt Nam vừa có hiệu lực</h3>
+
+<p><b>Luật AI</b>, hiệu lực 1/3/2026. Giáo dục nằm trong nhóm rủi ro cao. Nhưng có một ranh giới quan
+trọng: luật áp cho hệ thống AI <i>được triển khai</i>, tức game chạy AI lúc học sinh dùng. Game HTML
+tĩnh do AI viết ra nhưng lúc chạy không gọi mô hình nào thì nhiều khả năng không thuộc diện. Ngược
+lại nếu định làm gia sư AI hay chấm bài tự luận bằng AI thì thuộc diện và phải đăng ký. Đây là câu
+cần hỏi luật sư trước khi thiết kế tính năng, không phải sau. Giai đoạn chuyển tiếp cho giáo dục kéo
+tới 1/9/2027.</p>
+
+<p><b>Nghị định 134/2026</b>, hiệu lực 9/4/2026, Điều 5a: quyền tác giả chỉ phát sinh khi con người
+đóng góp đáng kể và mang tính quyết định. Câu lệnh chung chung rồi nhận kết quả một cách thụ động thì
+không đạt ngưỡng.</p>
+
+<div class="note warn">
+  <span class="lbl">Việc nên làm ngay, gần như không tốn gì</span>
+  <p>Nếu đội sinh hàng loạt game bằng AI mà không giữ hồ sơ chứng minh người đã thiết kế, chọn lọc và
+  biên tập, thì số game đó có thể không được bảo hộ quyền tác giả — ai chép cũng không kiện được.</p>
+  <p>Lập quy trình lưu vết song song ngay từ đầu: tài liệu thiết kế, bản ghi rà soát, nhật ký ai sửa
+  gì. Làm từ đầu thì gần như miễn phí. Làm sau thì không dựng lại được.</p>
+</div>
+
+<div class="note ok">
+  <span class="lbl">Tin tốt khi bán cho trường</span>
+  <p>Thông tư 20/2014 của Bộ Thông tin và Truyền thông quy định phần mềm nguồn mở <b>được ưu tiên mua
+  sắm</b> trong cơ quan nhà nước. Thông tư 08/2010 của Bộ Giáo dục cũng chủ trương dùng nguồn mở trong
+  cơ sở giáo dục. Dùng nguồn mở là điểm cộng khi đấu thầu, không phải điểm trừ.</p>
+  <p>Cách khai chuẩn trong hồ sơ thầu: “phần mềm do chúng tôi phát triển, có sử dụng các thành phần
+  nguồn mở theo giấy phép MIT và Apache-2.0, danh mục kèm phụ lục”. Khai “sở hữu toàn bộ” trong khi
+  thực chất là fork thì là khai sai sự thật.</p>
+</div>
+
+<h2 id="s9">9. Cách tìm và thẩm định</h2>
+
+<h3>Cú pháp tìm trên GitHub — đã kiểm chứng bằng số học</h3>
+
+<ul>
+  <li>Từ khoá <code>OR</code> gây lỗi, không dùng được.</li>
+  <li>Lặp <code>license:</code> nghĩa là <b>hoặc</b>. Kiểm chứng: <code>topic:educational-game
+  license:mit</code> ra 286, thêm <code>license:apache-2.0</code> ra 29, gộp lại đúng 315.</li>
+  <li>Lặp <code>topic:</code> thì ngược lại, nghĩa là <b>và</b>. Hai chủ đề gộp lại thì kết quả co
+  từ hơn nghìn xuống còn sáu.</li>
+</ul>
+
+<pre><code># Quét rộng, giấy phép an toàn
+topic:html5-game license:mit license:apache-2.0 license:bsd-3-clause archived:false
+
+# Mỏ tốt nhất cho game web thương mại
+topic:phaser license:mit stars:&gt;50 pushed:&gt;2025-01-01
+
+# Truy vấn phòng thủ — chạy để LOẠI TRỪ
+topic:html5-game license:agpl-3.0</code></pre>
+
+<p>Lưu ý giới hạn: GitHub nhận diện giấy phép bằng cách quét tệp ở thư mục gốc, nên nó không thấy
+giấy phép hỗn hợp bên trong. Kết quả trả về là tín hiệu tốt để xem tiếp, không phải kết luận.</p>
+
+<h3>Rào chắn tự động</h3>
+<p>Cắm dòng này vào quy trình dựng để lỗi không tái diễn — có ai lỡ thêm thư viện bẩn là dừng ngay:</p>
+<pre><code>npx license-checker --production \
+  --failOn "GPL-3.0;GPL-2.0;AGPL-3.0;LGPL-3.0;CC-BY-NC-4.0;CC-BY-NC-SA-4.0"</code></pre>
+
+<h3>Lưu bằng chứng khi fork</h3>
+<p>Giấy phép có thể bị đổi, repo có thể bị xoá. Đội fork theo giấy phép tại thời điểm fork, nhưng
+phải chứng minh được điều đó. Cần lưu: mã commit chính xác, bản sao tệp giấy phép, thông tin repo,
+ảnh chụp màn hình trang repo. Và lưu vĩnh viễn qua Software Heritage — mã định danh của họ đã trở
+thành tiêu chuẩn quốc tế ISO/IEC 18670 từ tháng 4/2025, vẫn hợp lệ kể cả khi repo gốc biến mất.</p>
+
+<h2 id="s10">10. Tóm lại</h2>
+
+<p>Vấn đề không nằm ở công nghệ.</p>
+
+<p>Sưu tầm game không cứu được, vì lọc hết ba nghìn game chỉ còn ba cái vừa sống vừa được phép dùng.
+Đổi engine không tự làm game vui hơn, và ba mũi khảo sát độc lập đều nói vậy. Công cụ AI sinh game
+thì dựng nháp tốt nhưng chưa bàn giao được, và có những điều khoản sở hữu cần tránh.</p>
+
+<p>Thứ đang thiếu là hai chuyện làm được ngay tuần này, trên chính bản đang có, không đổi một dòng
+hạ tầng nào: <b>một bảng màu thống nhất</b> mất nửa ngày, và <b>năm việc về cảm giác chơi</b> mất hai
+giờ.</p>
+
+<p>Sau đó mới tính chuyện engine, và chỉ nên tính bằng một bản thử ba ngày chạy trên máy tính bảng
+thật của học sinh. Còn chuyện fork thì có hai chỗ đáng làm — game bản đồ và game hợp tác — và một chỗ
+nên tự viết vì không có hàng.</p>
+
+<footer>
+  <p><b>Nguồn</b> — Báo cáo tổng hợp từ tám mũi khảo sát: game giáo dục mã nguồn mở, so sánh engine
+  2D web, cảm giác chơi, tài sản mỹ thuật 2D, công cụ AI sinh game, game phổ thông theo ba thể loại,
+  luật giấy phép khi fork, một mũi về Construct 3 cùng PlayCanvas và Cocos, và một mũi về các công cụ AI mới ra năm 2026.</p>
+  <p class="src">
+    Tra cứu chính:
+    <a href="https://osgameclones.com/">OSGameClones</a> ·
+    <a href="https://github.com/phaserjs/phaser">Phaser</a> ·
+    <a href="https://github.com/spider-hand/geoguess-lite">geoguess-lite</a> ·
+    <a href="https://github.com/HumanCompatibleAI/overcooked_ai">overcooked_ai</a> ·
+    <a href="https://kenney.nl/assets">Kenney</a> ·
+    <a href="https://www.gnu.org/licenses/gpl-faq.html">GNU GPL FAQ</a> ·
+    <a href="https://choosealicense.com/no-permission/">choosealicense</a> ·
+    <a href="https://www.construct.net/en/make-games/buy">Construct 3</a> ·
+    <a href="https://github.com/grapefrukt/juicy-breakout">Juice it or lose it</a>
+  </p>
+  <p style="margin-top:14px">Những chỗ chưa xác minh được đã ghi rõ trong từng mục. Phần pháp lý dẫn
+  từ văn bản gốc, nhưng không thay thế được ý kiến luật sư sở hữu trí tuệ — đặc biệt ở ba điểm: hiệu
+  lực của giấy phép nguồn mở quốc tế trước toà án Việt Nam, cách diễn đạt cam kết bản quyền trong hồ
+  sơ thầu, và câu hỏi GPL với mã JavaScript gửi xuống trình duyệt.</p>
+</footer>
+
+</div>
+</body>
+</html>
