@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Xưởng tế bào — bản Gimkit</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden;background:#14100c;
+    font:16px/1.45 "Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+    touch-action:none;user-select:none;-webkit-user-select:none}
+  #wrap{position:fixed;inset:0}
+  canvas{display:block}
+
+  /* ─── chữ nổi trên canvas ─── */
+  #hud-top{position:fixed;z-index:20;top:0;left:0;right:0;padding:13px 15px;
+    display:flex;gap:9px;align-items:flex-start;flex-wrap:wrap;
+    pointer-events:none;color:#fff;font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+  .chip{background:rgba(20,16,12,.62);border:2px solid rgba(255,255,255,.22);
+    border-radius:999px;padding:6px 14px;font-size:14.5px;backdrop-filter:blur(6px);
+    display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .chip b{font-size:16.5px}
+  #hud-goal{margin-left:auto;max-width:min(44vw,320px);font-size:13px;
+    font-weight:700;line-height:1.35;text-align:right;opacity:.94}
+  /* màn hẹp: bỏ dòng mục tiêu, để ba cái chip nằm gọn một hàng */
+  @media (max-width:620px){
+    #hud-goal{display:none}
+    .chip{font-size:13px;padding:5px 11px}
+    .chip b{font-size:15px}
+  }
+
+  #prompt{position:fixed;z-index:20;left:50%;bottom:126px;
+    transform:translateX(-50%) scale(.9);
+    background:#fffdf6;color:#2a2118;border:3px solid #2a2118;border-radius:14px;
+    box-shadow:0 5px 0 #2a2118;padding:9px 17px;font-weight:800;font-size:14.5px;
+    opacity:0;transition:opacity .16s,transform .16s;pointer-events:none;
+    max-width:86vw;text-align:center}
+  #prompt.on{opacity:1;transform:translateX(-50%) scale(1)}
+  #prompt kbd{background:#2a2118;color:#fff;border-radius:6px;padding:2px 8px;
+    font:inherit;font-size:12.5px;margin-right:6px}
+  body.touch #prompt kbd{display:none}
+
+  /* ─── hộp thoại ─── */
+  .sheet{position:fixed;inset:0;z-index:40;display:none;place-items:center;padding:16px;
+    background:rgba(14,10,7,.72)}
+  .sheet.on{display:grid}
+  .panel{background:#fdf8ec;color:#2a2118;border:4px solid #2a2118;border-radius:22px;
+    box-shadow:0 10px 0 #2a2118,0 26px 50px rgba(0,0,0,.45);
+    padding:22px;width:min(560px,94vw);max-height:88vh;overflow:auto;
+    animation:pop .22s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{from{transform:scale(.9) translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  .panel.shake{animation:shk .3s}
+  @keyframes shk{0%,100%{transform:none}20%{transform:translateX(-9px)}
+    45%{transform:translateX(7px)}70%{transform:translateX(-4px)}}
+  .panel h2{margin:0 0 4px;font-size:21px;letter-spacing:-.01em}
+  .panel .sub{margin:0 0 15px;font-size:13.5px;color:#7d6d58;font-weight:600}
+  .panel p{font-size:15.5px;font-weight:600}
+  .btn{font:inherit;font-weight:800;cursor:pointer;background:#fffdf6;color:#2a2118;
+    border:3px solid #2a2118;border-radius:13px;box-shadow:0 4px 0 #2a2118;
+    padding:11px 16px;font-size:15px;transition:transform .07s,box-shadow .07s;
+    width:100%;text-align:left;display:flex;align-items:center;gap:11px}
+  .btn:active{transform:translateY(4px);box-shadow:0 0 0 #2a2118}
+  .btn+.btn{margin-top:9px}
+  .btn.go{background:#3fae6b;color:#fff;justify-content:center;text-align:center}
+  .btn.mid{justify-content:center;text-align:center}
+  .btn.nhe{box-shadow:none;border-color:#d4c8b2;color:#7d6d58;background:transparent}
+  .btn:disabled{opacity:.42;cursor:not-allowed}
+  .btn .ico{width:34px;height:34px;flex:none}
+  .btn .meta{margin-left:auto;font-size:12.5px;color:#7d6d58;font-weight:700;
+    text-align:right;white-space:nowrap}
+
+  /* ─── điều khiển cảm ứng ─── */
+  #pad{position:fixed;z-index:25;left:18px;bottom:20px;width:130px;height:130px;
+    border-radius:50%;background:rgba(255,255,255,.09);
+    border:2.5px solid rgba(255,255,255,.26);display:none;touch-action:none}
+  #knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;
+    border-radius:50%;background:rgba(255,255,255,.82);
+    box-shadow:0 3px 12px rgba(0,0,0,.4)}
+  #act{position:fixed;z-index:25;right:20px;bottom:32px;width:86px;height:86px;
+    border-radius:50%;background:#3fae6b;color:#fff;border:4px solid #2a2118;
+    box-shadow:0 5px 0 #2a2118;font:inherit;font-weight:800;font-size:14px;
+    display:none;cursor:pointer;line-height:1.1}
+  #act:active{transform:translateY(5px);box-shadow:0 0 0 #2a2118}
+  body.touch #pad,body.touch #act{display:block}
+
+  .pop{position:fixed;z-index:30;pointer-events:none;font-weight:800;font-size:18px;
+    text-shadow:0 2px 6px rgba(0,0,0,.55);will-change:transform,opacity}
+
+  @media (prefers-reduced-motion:reduce){
+    .panel,.panel.shake{animation:none}
+    #prompt{transition:none}
+  }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="cv"></canvas></div>
+
+<div id="hud-top">
+  <div class="chip">⚡ <b id="ui-nl">0</b></div>
+  <div class="chip">📦 <b id="ui-sp">0</b>/3 gói đạm</div>
+  <div class="chip">🔧 <b id="ui-may">0</b>/4 máy</div>
+  <div id="hud-goal">Tới <b>BÀN HỎI</b> lấy năng lượng → ra <b>KỆ MÁY</b> lấy máy → lắp vào bốn ô theo đúng thứ tự dây chuyền.</div>
+</div>
+
+<div id="prompt"><kbd>E</kbd><span id="prompt-txt"></span></div>
+
+<div id="pad"><div id="knob"></div></div>
+<button id="act">Làm</button>
+
+<div class="sheet on" id="sh-intro"><div class="panel">
+  <h2>Nhà máy tế bào ngừng chạy</h2>
+  <p class="sub">Sinh học 10 · Bào quan và chức năng</p>
+  <p style="margin:0 0 12px">
+    Đêm qua có người tháo mất <b>bốn cái máy</b> trong xưởng. Từ sáng tới giờ nhân tế bào
+    vẫn gửi bản thiết kế ra đều đặn, mà đầu ra chẳng có gói đạm nào.
+  </p>
+  <p style="margin:0 0 16px">
+    Việc của bạn: <b>tìm ra máy nào thiếu ở đâu</b> rồi lắp lại cho dây chuyền chạy.
+    Muốn có máy thì cần năng lượng — và năng lượng đến từ trả lời đúng.
+  </p>
+  <p class="sub" style="margin:0 0 14px">
+    Di chuyển: <b>WASD</b> hoặc phím mũi tên · Làm việc: <b>E</b><br>
+    Trên máy tính bảng: kéo vòng tròn bên trái, bấm nút xanh bên phải.
+  </p>
+  <button class="btn go" onclick="G.start()">Vào xưởng →</button>
+</div></div>
+
+<div class="sheet" id="sh-dlg"><div class="panel" id="dlg-panel"></div></div>
+
+<script>
+'use strict';
+const G = (function(){
+
+/* ══════════════════════════════════════════════════════════════════
+   1 · BẢNG MÀU — sáu màu, khoá cứng. Không vẽ màu nào ngoài bảng này.
+   ══════════════════════════════════════════════════════════════════ */
+const C = {
+  ink   : '#2a2118',   // nét và chữ
+  san   : '#f0d9a8',   // sàn tế bào chất
+  sanToi: '#e3c791',   // sàn ô xen kẽ
+  tuong : '#d98452',   // mặt trên màng tế bào
+  tuongF: '#a9552f',   // mặt đứng màng tế bào
+  xanh  : '#3fae6b',
+  bien  : '#3f8fe8',
+  hong  : '#ea5fae',
+  cam   : '#f0862c',
+  vang  : '#f2b722'
+};
+const RM = matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* ══════════════════════════════════════════════════════════════════
+   2 · BẢN ĐỒ — 24×14 ô, mỗi ô 48 điểm ảnh
+   #tường  .sàn  N nhân  Q bàn hỏi  S kệ máy  X cửa xuất
+   1..4 = bốn ô lắp máy, số chính là thứ tự chặng trên dây chuyền
+   ══════════════════════════════════════════════════════════════════ */
+const MAP = [
+  '########################',
+  '#..QQ..................#',
+  '#..QQ..................#',
+  '#......................#',
+  '#......1.......3.......#',
+  '#......................#',
+  '#..NN..................#',
+  '#..NN.................X#',
+  '#......................#',
+  '#......................#',
+  '#..SS......2.......4...#',
+  '#..SS..................#',
+  '#......................#',
+  '########################'
+];
+const TS = 48, MW = 24, MH = 14;
+
+/* ══════════════════════════════════════════════════════════════════
+   3 · BỐN CÁI MÁY — là dữ liệu, không viết cứng vào cơ chế chơi
+   ══════════════════════════════════════════════════════════════════ */
+const MAY = [
+  { id:'ribo',  ten:'Ribôxôm',       mau:C.xanh, gia:3,
+    viec:'Đọc bản thiết kế rồi dệt ra chuỗi đạm thô.' },
+  { id:'lnc',   ten:'Lưới nội chất', mau:C.bien, gia:3,
+    viec:'Gấp chuỗi đạm thô cho đúng hình dạng.' },
+  { id:'golgi', ten:'Bộ máy Golgi',  mau:C.hong, gia:4,
+    viec:'Dán nhãn và đóng gói đạm đã gấp.' },
+  { id:'tithe', ten:'Ti thể',        mau:C.cam,  gia:4,
+    viec:'Đốt đường lấy năng lượng cho cả xưởng.' }
+];
+const mayTheoId = id => MAY.find(m => m.id === id);
+
+/* ══════════════════════════════════════════════════════════════════
+   4 · CÂU HỎI — nội dung tách khỏi cơ chế, sau này nạp từ kho học liệu
+   ══════════════════════════════════════════════════════════════════ */
+const HOI = [
+  { q:'Bản thiết kế đạm được giữ ở đâu trong tế bào?',
+    a:['Trong nhân','Trong màng tế bào','Trong ti thể'],
+    vi:'Nhân giữ ADN — bản thiết kế gốc. Nó gửi bản sao ra ngoài chứ không tự đi làm.' },
+  { q:'Cái nào dệt ra chuỗi đạm đầu tiên?',
+    a:['Ribôxôm','Bộ máy Golgi','Không bào'],
+    vi:'Ribôxôm đọc bản sao rồi nối các axit amin thành chuỗi. Nó là máy đầu dây chuyền.' },
+  { q:'Chuỗi đạm vừa dệt xong còn thô. Nó đi đâu tiếp?',
+    a:['Lưới nội chất','Ra ngoài luôn','Về lại nhân'],
+    vi:'Lưới nội chất gấp chuỗi cho đúng hình. Đạm sai hình thì không làm được việc.' },
+  { q:'Bộ phận nào dán nhãn, đóng gói đạm trước khi xuất?',
+    a:['Bộ máy Golgi','Ribôxôm','Ti thể'],
+    vi:'Golgi như khâu đóng gói cuối dây chuyền — dán nhãn để đạm tới đúng nơi cần.' },
+  { q:'Cả xưởng lấy năng lượng từ bộ phận nào?',
+    a:['Ti thể','Nhân','Màng tế bào'],
+    vi:'Ti thể đốt đường thành năng lượng. Không có nó thì mọi máy khác đứng im.' },
+  { q:'Màng tế bào làm việc gì?',
+    a:['Kiểm soát thứ được vào và ra','Dệt đạm','Giữ bản thiết kế'],
+    vi:'Màng là cái cổng có bảo vệ — chọn cái gì được vào, cái gì phải ra.' },
+  { q:'Nếu ribôxôm ngừng việc thì đầu ra thiếu gì?',
+    a:['Thiếu hẳn chuỗi đạm','Đạm bị sai nhãn','Đạm gấp sai hình'],
+    vi:'Máy đầu dây chuyền ngừng thì phía sau không có gì mà làm. Đó là cách chẩn đoán.' },
+  { q:'Đạm ra đủ số nhưng tới sai chỗ. Máy nào có vấn đề?',
+    a:['Bộ máy Golgi','Ribôxôm','Nhân'],
+    vi:'Sai địa chỉ là lỗi dán nhãn — việc của Golgi.' }
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   5 · TRẠNG THÁI
+   ══════════════════════════════════════════════════════════════════ */
+let S, cv, ctx, W = 0, H = 0, DPR = 1, Z = 1;
+let cam = {x:0, y:0}, last = 0;
+const keys = {};
+let joy = {on:false, dx:0, dy:0};
+let daHoi = [];
+
+function moi(){
+  return {
+    chay:false, nl:0, sp:0, xong:false,
+    o:{1:null, 2:null, 3:null, 4:null},
+    kho:[],
+    nv:{x:5.5*TS, y:8.5*TS, vx:0, vy:0, huong:1, buoc:0, nen:1},
+    kien:[], nhaOut:0, t:0, rung:0
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   6 · TRA CỨU BẢN ĐỒ
+   ══════════════════════════════════════════════════════════════════ */
+const oTai  = (cx, cy) => (cy<0 || cy>=MH || cx<0 || cx>=MW) ? '#' : MAP[cy][cx];
+const dacX  = (cx, cy) => oTai(cx, cy) === '#';
+
+function tam(kt){
+  let n = 0, sx = 0, sy = 0;
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++)
+    if (MAP[y][x] === kt){ n++; sx += x + .5; sy += y + .5; }
+  return n ? {x: sx/n*TS, y: sy/n*TS} : null;
+}
+const MOC = {
+  nhan: tam('N'), ban: tam('Q'), ke: tam('S'), xuat: tam('X'),
+  o: {1:tam('1'), 2:tam('2'), 3:tam('3'), 4:tam('4')}
+};
+/* dây chuyền: nhân → ô1 → ô2 → ô3 → ô4 → cửa xuất */
+const DUONG = [MOC.nhan, MOC.o[1], MOC.o[2], MOC.o[3], MOC.o[4], MOC.xuat];
+
+/* ══════════════════════════════════════════════════════════════════
+   7 · KHỞI ĐỘNG
+   ══════════════════════════════════════════════════════════════════ */
+function boot(){
+  cv = document.getElementById('cv');
+  ctx = cv.getContext('2d');
+  vaBo();
+  S = moi();
+  co();
+  addEventListener('resize', co);
+  addEventListener('orientationchange', () => setTimeout(co, 120));
+
+  addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+    if (k === 'e' || k === 'enter') lam();
+    if (k === 'escape') dong();
+    if ([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) e.preventDefault();
+  });
+  addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+  if (matchMedia('(hover:none)').matches) document.body.classList.add('touch');
+  canCam();
+  document.getElementById('act').onclick = lam;
+  requestAnimationFrame(vong);
+}
+
+/* máy tính bảng cũ chưa có roundRect — vá lại cho khỏi trắng màn */
+function vaBo(){
+  if (CanvasRenderingContext2D.prototype.roundRect) return;
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r){
+    r = Math.min(r, w/2, h/2);
+    this.moveTo(x+r, y);
+    this.arcTo(x+w, y,   x+w, y+h, r);
+    this.arcTo(x+w, y+h, x,   y+h, r);
+    this.arcTo(x,   y+h, x,   y,   r);
+    this.arcTo(x,   y,   x+w, y,   r);
+    this.closePath();
+  };
+}
+
+function co(){
+  DPR = Math.min(2, devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // Kéo gần lại cho nhân vật đủ to và camera thật sự đi theo.
+  // Cả bản đồ lọt vào một màn hình là mất hẳn cảm giác đang đi trong xưởng.
+  Z = Math.max(1, Math.min(1.8, Math.min(W/(14*TS), H/(9*TS))));
+}
+/* vùng nhìn thấy tính theo điểm ảnh trong thế giới, không phải trên màn */
+const nhinW = () => W/Z, nhinH = () => H/Z;
+
+function start(){
+  document.getElementById('sh-intro').classList.remove('on');
+  S.chay = true; last = performance.now(); capNhat();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   8 · CẦN ĐIỀU KHIỂN CẢM ỨNG
+   ══════════════════════════════════════════════════════════════════ */
+function canCam(){
+  const pad = document.getElementById('pad'), knob = document.getElementById('knob');
+  let id = null, ox = 0, oy = 0;
+  const R = 38;
+  const bat = e => {
+    const t = e.changedTouches[0]; id = t.identifier;
+    const r = pad.getBoundingClientRect();
+    ox = r.left + r.width/2; oy = r.top + r.height/2;
+    joy.on = true; e.preventDefault();
+  };
+  const di = e => {
+    if (id === null) return;
+    for (const t of e.changedTouches){
+      if (t.identifier !== id) continue;
+      const dx = t.clientX - ox, dy = t.clientY - oy;
+      const d = Math.hypot(dx, dy) || 1;
+      const k = Math.min(1, d/R);
+      joy.dx = dx/d*k; joy.dy = dy/d*k;
+      knob.style.transform = `translate(${joy.dx*R}px,${joy.dy*R}px)`;
+    }
+    e.preventDefault();
+  };
+  const thoi = e => {
+    for (const t of e.changedTouches) if (t.identifier === id){
+      id = null; joy = {on:false, dx:0, dy:0};
+      knob.style.transform = 'none';
+    }
+  };
+  pad.addEventListener('touchstart', bat,  {passive:false});
+  pad.addEventListener('touchmove',  di,   {passive:false});
+  pad.addEventListener('touchend',   thoi);
+  pad.addEventListener('touchcancel',thoi);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   9 · VÒNG CHƠI
+   ══════════════════════════════════════════════════════════════════ */
+function vong(now){
+  const dt = Math.min(0.05, (now - last)/1000);
+  last = now;
+  if (S.chay) buoc(dt);
+  ve();
+  requestAnimationFrame(vong);
+}
+
+function buoc(dt){
+  S.t += dt;
+  if (S.rung > 0) S.rung = Math.max(0, S.rung - dt*3.2);
+
+  /* — di chuyển — */
+  const moKin = sheet.classList.contains('on');
+  let ix = 0, iy = 0;
+  if (!moKin){
+    if (keys['a'] || keys['arrowleft'])  ix -= 1;
+    if (keys['d'] || keys['arrowright']) ix += 1;
+    if (keys['w'] || keys['arrowup'])    iy -= 1;
+    if (keys['s'] || keys['arrowdown'])  iy += 1;
+    if (joy.on){ ix += joy.dx; iy += joy.dy; }
+  }
+  const d = Math.hypot(ix, iy);
+  if (d > 1){ ix /= d; iy /= d; }
+
+  const TOC = 234, nv = S.nv;
+  nv.vx += (ix*TOC - nv.vx) * Math.min(1, dt*14);
+  nv.vy += (iy*TOC - nv.vy) * Math.min(1, dt*14);
+  if (Math.abs(nv.vx) > 8) nv.huong = Math.sign(nv.vx);
+
+  truot(nv, nv.vx*dt, 0);
+  truot(nv, 0, nv.vy*dt);
+
+  const nhanh = Math.hypot(nv.vx, nv.vy);
+  nv.buoc += nhanh * dt * 0.05;
+  const nhun = RM ? 0 : Math.sin(nv.buoc*Math.PI*2) * 0.06 * Math.min(1, nhanh/170);
+  nv.nen += (1 + nhun - nv.nen) * Math.min(1, dt*18);
+
+  /* — dây chuyền chạy khi bốn máy đúng chỗ — */
+  if (dungHet() && !S.xong){
+    S.nhaOut += dt;
+    if (S.nhaOut > 1.2){ S.nhaOut = 0; S.kien.push({t:0}); }
+  }
+  for (let i = S.kien.length - 1; i >= 0; i--){
+    const k = S.kien[i];
+    k.t += dt * 0.30;
+    if (k.t >= 1){
+      S.kien.splice(i, 1);
+      S.sp++; capNhat();
+      const p = tren(MOC.xuat);
+      soNay(p.x, p.y - 32, '+1 gói đạm', C.xanh);
+      if (S.sp >= 3 && !S.xong){ S.xong = true; setTimeout(thang, 500); }
+    }
+  }
+
+  /* — camera đi theo, chặn ở biên bản đồ — */
+  const mx = MW*TS, my = MH*TS, vw = nhinW(), vh = nhinH();
+  let tx = nv.x - vw/2, ty = nv.y - vh/2;
+  tx = Math.max(-24, Math.min(mx - vw + 24, tx));
+  ty = Math.max(-24, Math.min(my - vh + 24, ty));
+  cam.x += (tx - cam.x) * Math.min(1, dt*7);
+  cam.y += (ty - cam.y) * Math.min(1, dt*7);
+  if (mx < vw) cam.x = (mx - vw)/2;   // bản đồ hẹp hơn màn thì canh giữa
+  if (my < vh) cam.y = (my - vh)/2;
+
+  nhac(moKin);
+}
+
+function truot(nv, dx, dy){
+  const R = 15;
+  const nx = nv.x + dx, ny = nv.y + dy;
+  for (const [ox, oy] of [[-R,-R],[R,-R],[-R,R],[R,R]])
+    if (dacX(Math.floor((nx+ox)/TS), Math.floor((ny+oy)/TS))) return;
+  nv.x = nx; nv.y = ny;
+}
+
+const dungHet = () => [1,2,3,4].every(i => S.o[i] === MAY[i-1].id);
+
+/* ══════════════════════════════════════════════════════════════════
+   10 · MỐC GẦN NHẤT + NHẮC PHÍM
+   ══════════════════════════════════════════════════════════════════ */
+function gan(){
+  const nv = S.nv;
+  const ds = [
+    {loai:'ban', p:MOC.ban, txt:'Trả lời câu hỏi lấy năng lượng'},
+    {loai:'ke',  p:MOC.ke,  txt:'Xem kệ máy'}
+  ];
+  for (const i of [1,2,3,4]){
+    const co = S.o[i];
+    ds.push({loai:'o', so:i, p:MOC.o[i],
+      txt: co ? `Gỡ ${mayTheoId(co).ten} khỏi ô ${i}` : `Lắp máy vào ô ${i}`});
+  }
+  let tot = null, min = 76;
+  for (const m of ds){
+    const d = Math.hypot(nv.x - m.p.x, nv.y - m.p.y);
+    if (d < min){ min = d; tot = m; }
+  }
+  return tot;
+}
+
+function nhac(moKin){
+  const el = document.getElementById('prompt');
+  const m = moKin ? null : gan();
+  if (m){
+    document.getElementById('prompt-txt').textContent = m.txt;
+    el.classList.add('on');
+  } else el.classList.remove('on');
+}
+
+function lam(){
+  if (!S || !S.chay) return;
+  if (sheet.classList.contains('on')) return;
+  const m = gan(); if (!m) return;
+  if (m.loai === 'ban') moHoi();
+  else if (m.loai === 'ke') moKe();
+  else if (S.o[m.so]) go(m.so);
+  else moLap(m.so);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   11 · HỘP THOẠI
+   ══════════════════════════════════════════════════════════════════ */
+const sheet = document.getElementById('sh-dlg');
+const panel = document.getElementById('dlg-panel');
+function mo(html){
+  panel.classList.remove('shake');
+  panel.innerHTML = html;
+  sheet.classList.add('on');
+  panel.scrollTop = 0;
+}
+function dong(){ sheet.classList.remove('on'); }
+
+/* — bàn hỏi: trả lời đúng ra năng lượng. Đây là nhịp chính của lối chơi. — */
+function moHoi(){
+  if (daHoi.length >= HOI.length) daHoi = [];
+  let i;
+  do { i = Math.floor(Math.random()*HOI.length); } while (daHoi.includes(i));
+  daHoi.push(i);
+  const h = HOI[i];
+  // đáp án đúng luôn ở vị trí 0 trong dữ liệu, trộn lại khi hiện ra
+  const tt = h.a.map((_, k) => k).sort(() => Math.random() - .5);
+  mo(`<h2>Bàn hỏi</h2><p class="sub">Đúng thì được ⚡2 · sai không mất gì</p>
+    <p style="margin:0 0 15px;font-size:17px;font-weight:700">${h.q}</p>
+    ${tt.map(k => `<button class="btn" onclick="G.dap(${k === 0 ? 1 : 0},${i})">${h.a[k]}</button>`).join('')}
+    <button class="btn nhe" style="margin-top:13px" onclick="G.dong()">Để sau</button>`);
+}
+
+function dap(dung, i){
+  const h = HOI[i];
+  if (dung){
+    S.nl += 2; capNhat();
+    const p = tren(MOC.ban);
+    soNay(p.x, p.y - 38, '+2 ⚡', C.vang);
+    mo(`<h2 style="color:${C.xanh}">Đúng rồi</h2>
+      <p class="sub">+2 năng lượng · đang có ⚡${S.nl}</p>
+      <p style="margin:0 0 17px">${h.vi}</p>
+      <button class="btn go" onclick="G.moHoi()">Câu nữa</button>
+      <button class="btn nhe" style="margin-top:9px" onclick="G.dong()">Thôi, đi lắp máy</button>`);
+  } else {
+    // sai thì lắc riêng hộp thoại. Không rung màn — rung màn là trừng phạt.
+    mo(`<h2>Chưa đúng</h2><p class="sub">Không mất năng lượng nào cả</p>
+      <p style="margin:0 0 17px">${h.vi}</p>
+      <button class="btn go" onclick="G.moHoi()">Thử câu khác</button>
+      <button class="btn nhe" style="margin-top:9px" onclick="G.dong()">Để sau</button>`);
+    if (!RM){
+      void panel.offsetWidth;
+      panel.classList.add('shake');
+    }
+  }
+}
+
+/* — kệ máy — */
+function moKe(){
+  mo(`<h2>Kệ máy</h2><p class="sub">Đang có ⚡${S.nl} năng lượng</p>
+    ${MAY.map(m => {
+      const daCo = S.kho.includes(m.id) || Object.values(S.o).includes(m.id);
+      const du = S.nl >= m.gia;
+      return `<button class="btn" ${daCo || !du ? 'disabled' : ''} onclick="G.mua('${m.id}')">
+        <span class="ico">${bieu(m, 34)}</span>
+        <span><b>${m.ten}</b><br><span style="font-size:12.5px;color:#7d6d58;font-weight:600">${m.viec}</span></span>
+        <span class="meta">${daCo ? 'đã có' : '⚡' + m.gia}</span></button>`;
+    }).join('')}
+    <button class="btn nhe" style="margin-top:13px" onclick="G.dong()">Đóng</button>`);
+}
+
+function mua(id){
+  const m = mayTheoId(id);
+  if (S.nl < m.gia) return;
+  S.nl -= m.gia; S.kho.push(id); capNhat();
+  const p = tren(MOC.ke);
+  soNay(p.x, p.y - 38, '−' + m.gia + ' ⚡', C.cam);
+  moKe();
+}
+
+/* — ô lắp máy — */
+function moLap(so){
+  if (!S.kho.length){
+    mo(`<h2>Ô ${so} còn trống</h2><p class="sub">Trong tay chưa có máy nào</p>
+      <p style="margin:0 0 17px">Ra <b>KỆ MÁY</b> ở góc dưới bên trái để lấy máy.
+      Lấy máy cần năng lượng, mà năng lượng thì lấy ở <b>BÀN HỎI</b> góc trên bên trái.</p>
+      <button class="btn go" onclick="G.dong()">Rõ</button>`);
+    return;
+  }
+  mo(`<h2>Lắp vào ô ${so}</h2>
+    <p class="sub">Ô này là chặng thứ ${so} của dây chuyền</p>
+    ${S.kho.map(id => { const m = mayTheoId(id);
+      return `<button class="btn" onclick="G.lap(${so},'${id}')">
+        <span class="ico">${bieu(m, 34)}</span>
+        <span><b>${m.ten}</b><br><span style="font-size:12.5px;color:#7d6d58;font-weight:600">${m.viec}</span></span>
+      </button>`; }).join('')}
+    <button class="btn nhe" style="margin-top:13px" onclick="G.dong()">Để sau</button>`);
+}
+
+function lap(so, id){
+  S.o[so] = id;
+  S.kho.splice(S.kho.indexOf(id), 1);
+  capNhat(); dong();
+  const p = tren(MOC.o[so]);
+  const dungCho = MAY[so-1].id === id;
+  soNay(p.x, p.y - 32, dungCho ? 'đúng chỗ' : 'đã lắp', dungCho ? C.xanh : C.cam);
+  if (!RM) S.rung = dungCho ? 0.5 : 0.26;
+
+  if (dungHet()) setTimeout(() => {
+    mo(`<h2 style="color:${C.xanh}">Dây chuyền chạy rồi</h2>
+      <p class="sub">Bốn máy đã đúng chỗ</p>
+      <p style="margin:0 0 17px">Nhìn đường ống — kiện hàng bắt đầu đi từ nhân,
+      qua bốn máy, ra cửa xuất. Đủ ba gói đạm là xong việc.</p>
+      <button class="btn go" onclick="G.dong()">Xem thử</button>`);
+  }, 430);
+}
+
+function go(so){
+  const id = S.o[so];
+  S.o[so] = null; S.kho.push(id);
+  S.kien.length = 0;
+  capNhat();
+}
+
+function thang(){
+  mo(`<h2 style="color:${C.xanh}">Xưởng chạy lại được rồi</h2>
+    <p class="sub">Đã xuất ${S.sp} gói đạm</p>
+    <p style="margin:0 0 9px">Thứ tự đúng của dây chuyền:</p>
+    <p style="margin:0 0 17px;font-weight:700;line-height:1.75">
+      ${MAY.map((m, i) => `<span style="color:${m.mau}">${i+1}. ${m.ten}</span> — ${m.viec}`).join('<br>')}</p>
+    <button class="btn go" onclick="G.lai()">Chơi lại</button>`);
+}
+
+function lai(){
+  S = moi(); S.chay = true; daHoi = [];
+  capNhat(); dong();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   12 · SỐ NẢY — phần thưởng hiện ngay tại chỗ vừa xảy ra
+   ══════════════════════════════════════════════════════════════════ */
+/* đổi toạ độ trong thế giới sang toạ độ trên màn — có tính phóng */
+function tren(p){ return {x: (p.x - cam.x)*Z, y: (p.y - cam.y)*Z}; }
+
+function soNay(x, y, chu, mau){
+  const el = document.createElement('div');
+  el.className = 'pop'; el.textContent = chu;
+  el.style.color = mau;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.style.transform = 'translate(-50%,0)';
+  document.body.appendChild(el);
+  if (RM){ setTimeout(() => el.remove(), 800); return; }
+  const lech = (Math.random() - .5) * 26;
+  const t0 = performance.now();
+  (function b(now){
+    const t = (now - t0)/880;
+    if (t >= 1){ el.remove(); return; }
+    const e = 1 - Math.pow(1 - t, 3);
+    el.style.transform =
+      `translate(calc(-50% + ${lech*e}px),${-54*e}px) scale(${1 + .25*Math.sin(t*Math.PI)})`;
+    el.style.opacity = String(1 - Math.pow(t, 2.2));
+    requestAnimationFrame(b);
+  })(t0);
+}
+
+function capNhat(){
+  document.getElementById('ui-nl').textContent = S.nl;
+  document.getElementById('ui-sp').textContent = S.sp;
+  document.getElementById('ui-may').textContent = [1,2,3,4].filter(i => S.o[i]).length;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   13 · VẼ CẢNH
+   Nhìn từ trên xuống. Tường có mặt đứng + bóng đổ nên thấy được độ cao —
+   đây chính là chỗ tạo cảm giác 2,5D, không cần model 3D nào.
+   ══════════════════════════════════════════════════════════════════ */
+function ve(){
+  ctx.save();
+  ctx.fillStyle = '#14100c'; ctx.fillRect(0, 0, W, H);
+
+  // rung nhẹ khi lắp xong. Bắt buộc có thành phần xoay —
+  // thiếu xoay thì não đọc ra "màn hình bị lag", có xoay thì đọc ra "vừa xong một việc".
+  let sx = 0, sy = 0, sr = 0;
+  if (S.rung > 0){
+    const k = S.rung * S.rung;
+    sx = (Math.random() - .5) * 13 * k;
+    sy = (Math.random() - .5) * 13 * k;
+    sr = (Math.random() - .5) * 0.016 * k;
+  }
+  ctx.translate(W/2 + sx, H/2 + sy); ctx.rotate(sr); ctx.translate(-W/2, -H/2);
+  ctx.scale(Z, Z);
+  ctx.translate(-Math.round(cam.x*Z)/Z, -Math.round(cam.y*Z)/Z);
+
+  veSan();
+  veOng();
+  veMoc();
+  veOLap();
+  veTuong();
+
+  // mọi thứ di chuyển: sắp theo trục dọc, cái ở dưới che cái ở trên
+  const ds = [{y: S.nv.y, f: veNV}];
+  for (const k of S.kien){
+    const p = diemTren(k.t);
+    ds.push({y: p.y, f: () => veKien(p)});
+  }
+  ds.sort((a, b) => a.y - b.y).forEach(o => o.f());
+
+  ctx.restore();
+  anhSang();
+}
+
+function veSan(){
+  const x0 = Math.max(0, Math.floor(cam.x/TS)), x1 = Math.min(MW, Math.ceil((cam.x+nhinW())/TS));
+  const y0 = Math.max(0, Math.floor(cam.y/TS)), y1 = Math.min(MH, Math.ceil((cam.y+nhinH())/TS));
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++){
+    if (oTai(x, y) === '#') continue;
+    ctx.fillStyle = (x + y) % 2 ? C.sanToi : C.san;
+    ctx.fillRect(x*TS, y*TS, TS, TS);
+    // hạt: vị trí suy ra từ toạ độ nên đứng yên, không nhấp nháy từng khung
+    ctx.fillStyle = 'rgba(140,105,60,.15)';
+    const h = (x*73 + y*151) % 7;
+    ctx.fillRect(x*TS + 8 + h*5, y*TS + 12 + ((x*31 + y*17) % 5)*6, 3, 3);
+    ctx.fillRect(x*TS + 26 + ((x*11 + y*29) % 4)*4, y*TS + 32 + h*2, 2.5, 2.5);
+  }
+}
+
+/* Màng tế bào. Đây là chỗ tạo cảm giác 2,5D: mỗi ô tường vẽ hai mặt —
+   mặt trên nhìn từ trên xuống, và mặt đứng nhìn ngang. Thêm bóng đổ
+   xuống sàn nữa là mắt tự đọc ra "cái tường này cao", không cần 3D thật. */
+function veTuong(){
+  const CAO = 26;                       // độ cao mặt đứng
+  const x0 = Math.max(0, Math.floor(cam.x/TS) - 1);
+  const x1 = Math.min(MW, Math.ceil((cam.x + nhinW())/TS) + 1);
+  const y0 = Math.max(0, Math.floor(cam.y/TS) - 1);
+  const y1 = Math.min(MH, Math.ceil((cam.y + nhinH())/TS) + 1);
+
+  // bóng tường đổ xuống sàn — mờ dần, hai lớp
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++){
+    if (oTai(x, y) !== '#' || dacX(x, y+1)) continue;
+    ctx.fillStyle = 'rgba(40,28,14,.24)';
+    ctx.fillRect(x*TS, (y+1)*TS, TS, 9);
+    ctx.fillStyle = 'rgba(40,28,14,.11)';
+    ctx.fillRect(x*TS, (y+1)*TS + 9, TS, 8);
+  }
+
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++){
+    if (oTai(x, y) !== '#') continue;
+    const ho = !dacX(x, y+1);           // dưới là sàn → nhìn thấy mặt đứng
+    const yTop = y*TS, hTop = TS - (ho ? CAO : 0);
+
+    if (ho){
+      // mặt đứng: tối dần xuống chân tường
+      const g = ctx.createLinearGradient(0, yTop + hTop, 0, yTop + TS);
+      g.addColorStop(0, C.tuongF);
+      g.addColorStop(1, '#7d3c1f');
+      ctx.fillStyle = g;
+      ctx.fillRect(x*TS, yTop + hTop, TS, CAO);
+    }
+    // mặt trên
+    ctx.fillStyle = C.tuong;
+    ctx.fillRect(x*TS, yTop, TS, hTop);
+    // gờ sáng nơi mặt trên gặp mặt đứng — cạnh này làm nên độ dày
+    if (ho){
+      ctx.fillStyle = 'rgba(255,225,190,.55)';
+      ctx.fillRect(x*TS, yTop + hTop - 3, TS, 3);
+    }
+    // gờ sáng mép ngoài
+    if (!dacX(x, y-1)){
+      ctx.fillStyle = 'rgba(255,255,255,.18)';
+      ctx.fillRect(x*TS, yTop, TS, 5);
+    }
+    // đường ron giữa các ô cho tường đỡ phẳng
+    ctx.fillStyle = 'rgba(90,42,20,.16)';
+    ctx.fillRect(x*TS, yTop, 1.5, hTop);
+  }
+}
+
+function veOng(){
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const on = dungHet();
+  ctx.beginPath();
+  ctx.moveTo(DUONG[0].x, DUONG[0].y);
+  for (let i = 1; i < DUONG.length; i++) ctx.lineTo(DUONG[i].x, DUONG[i].y);
+  ctx.strokeStyle = 'rgba(40,28,14,.16)'; ctx.lineWidth = 26; ctx.stroke();
+  ctx.strokeStyle = on ? 'rgba(242,183,34,.9)' : 'rgba(255,253,246,.5)';
+  ctx.lineWidth = 15; ctx.stroke();
+  if (on && !RM){
+    ctx.setLineDash([13, 20]);
+    ctx.lineDashOffset = -S.t * 62;
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 5; ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+function diemTren(t){
+  const n = DUONG.length - 1;
+  const f = Math.min(0.9999, Math.max(0, t)) * n;
+  const i = Math.floor(f), u = f - i;
+  const a = DUONG[i], b = DUONG[i+1];
+  return {x: a.x + (b.x - a.x)*u, y: a.y + (b.y - a.y)*u};
+}
+
+function veMoc(){
+  // nhân
+  const nh = MOC.nhan;
+  bong(nh.x, nh.y + 34, 46);
+  ctx.fillStyle = '#c9a6e8'; tron(nh.x, nh.y, 42);
+  ctx.fillStyle = 'rgba(255,255,255,.42)'; tron(nh.x - 9, nh.y - 10, 13, false);
+  nhan(nh.x, nh.y + 60, 'NHÂN');
+
+  // bàn hỏi
+  const b = MOC.ban;
+  bong(b.x, b.y + 30, 42);
+  hop(b.x - 40, b.y - 26, 80, 52, C.vang);
+  ctx.font = '800 27px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = C.ink; ctx.fillText('?', b.x, b.y + 1);
+  nhan(b.x, b.y + 50, 'BÀN HỎI');
+
+  // kệ máy
+  const k = MOC.ke;
+  bong(k.x, k.y + 30, 42);
+  hop(k.x - 42, k.y - 28, 84, 56, '#fffdf6');
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+  for (let i = 0; i < 2; i++){
+    ctx.beginPath();
+    ctx.moveTo(k.x - 34, k.y - 8 + i*18); ctx.lineTo(k.x + 34, k.y - 8 + i*18);
+    ctx.stroke();
+  }
+  nhan(k.x, k.y + 52, 'KỆ MÁY');
+
+  // cửa xuất
+  const x = MOC.xuat;
+  ctx.fillStyle = dungHet() ? C.xanh : 'rgba(255,253,246,.38)';
+  tron(x.x, x.y, 24);
+  nhan(x.x, x.y + 44, 'XUẤT');
+}
+
+function veOLap(){
+  for (const i of [1,2,3,4]){
+    const p = MOC.o[i], co = S.o[i];
+    const dungCho = co && MAY[i-1].id === co;
+    bong(p.x, p.y + 26, 36);
+
+    ctx.beginPath(); ctx.arc(p.x, p.y, 32, 0, 7);
+    ctx.fillStyle = co ? 'rgba(255,253,246,.93)' : 'rgba(255,253,246,.34)';
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = co ? (dungCho ? C.xanh : C.cam) : 'rgba(42,33,24,.44)';
+    if (!co && !RM){ ctx.setLineDash([9, 8]); ctx.lineDashOffset = -S.t*14; }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    if (co){
+      const m = mayTheoId(co);
+      veMay(m, p.x, p.y);
+      nhan(p.x, p.y + 48, m.ten.toUpperCase());
+    } else {
+      ctx.font = '800 15px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(42,33,24,.66)';
+      ctx.fillText('Ô ' + i, p.x, p.y);
+    }
+  }
+}
+
+function veNV(){
+  const nv = S.nv;
+  bong(nv.x, nv.y + 15, 20);
+  ctx.save();
+  ctx.translate(nv.x, nv.y);
+  const s = nv.nen;
+  ctx.scale(nv.huong * (2 - s), s);
+
+  const nhanh = Math.hypot(nv.vx, nv.vy);
+  const b = RM ? 0 : Math.sin(nv.buoc*Math.PI*2) * 4 * Math.min(1, nhanh/150);
+
+  // chân
+  ctx.fillStyle = C.ink;
+  ctx.beginPath(); ctx.ellipse(-7, 15 + b, 5, 3.4, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 7, 15 - b, 5, 3.4, 0, 0, 7); ctx.fill();
+
+  // thân
+  ctx.beginPath();
+  ctx.moveTo(-15, 15);
+  ctx.quadraticCurveTo(-17, -17, 0, -18);
+  ctx.quadraticCurveTo(17, -17, 15, 15);
+  ctx.closePath();
+  ctx.fillStyle = '#5ec2d8'; ctx.fill();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3.4; ctx.stroke();
+
+  // áo blouse — cho ra dáng người làm trong xưởng
+  ctx.beginPath();
+  ctx.moveTo(-14, 6); ctx.lineTo(14, 6); ctx.lineTo(15, 15); ctx.lineTo(-15, 15);
+  ctx.closePath();
+  ctx.fillStyle = '#fdfbf4'; ctx.fill(); ctx.stroke();
+
+  // mắt
+  ctx.fillStyle = C.ink;
+  ctx.beginPath(); ctx.ellipse(-5.5, -7, 2.6, 3.6, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 5.5, -7, 2.6, 3.6, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  ctx.beginPath(); ctx.arc(-4.7, -8.4, 1, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc( 6.3, -8.4, 1, 0, 7); ctx.fill();
+
+  ctx.restore();
+}
+
+function veKien(p){
+  bong(p.x, p.y + 11, 12);
+  ctx.save(); ctx.translate(p.x, p.y);
+  if (!RM) ctx.rotate(Math.sin(S.t*7) * 0.12);
+  ctx.fillStyle = C.xanh;
+  ctx.beginPath(); ctx.roundRect(-10, -10, 20, 20, 5); ctx.fill();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(0, -10); ctx.lineTo(0, 10);
+  ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ── hàm vẽ dùng lại ── */
+function bong(x, y, r){
+  ctx.fillStyle = 'rgba(40,28,14,.22)';
+  ctx.beginPath(); ctx.ellipse(x, y, r*0.72, r*0.30, 0, 0, 7); ctx.fill();
+}
+function tron(x, y, r, vien = true){
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+  if (vien){ ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.stroke(); }
+}
+function hop(x, y, w, h, mau){
+  ctx.fillStyle = mau;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 10); ctx.fill();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3.6; ctx.stroke();
+}
+function nhan(x, y, chu){
+  ctx.font = '800 11.5px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(chu).width + 16;
+  ctx.fillStyle = 'rgba(20,16,12,.66)';
+  ctx.beginPath(); ctx.roundRect(x - w/2, y - 9, w, 18, 9); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.fillText(chu, x, y + .5);
+}
+
+/* — hình bốn cái máy, vẽ trong hộp 40×40 quanh tâm.
+     Đây là chỗ sau này thay bằng hình NIH BioArt (Public Domain) — */
+function veMay(m, x, y){
+  ctx.save(); ctx.translate(x, y);
+  ctx.lineWidth = 3.2; ctx.strokeStyle = m.mau; ctx.fillStyle = m.mau;
+  switch (m.id){
+    case 'ribo':
+      ctx.beginPath(); ctx.arc(-5, -2, 10, 0, 7); ctx.fill();
+      ctx.globalAlpha = .7; ctx.beginPath(); ctx.arc(7, 4, 7.5, 0, 7); ctx.fill();
+      ctx.globalAlpha = .5; ctx.beginPath(); ctx.arc(-8, 11, 4, 0, 7); ctx.fill();
+      break;
+    case 'lnc':
+      for (let i = 0; i < 4; i++){
+        ctx.beginPath(); ctx.moveTo(-16, -12 + i*9); ctx.lineTo(16, -12 + i*9); ctx.stroke();
+      }
+      for (const [px, py] of [[-9,-17],[2,-17],[11,-17],[-6,2],[8,2]]){
+        ctx.beginPath(); ctx.arc(px, py, 2.3, 0, 7); ctx.fill();
+      }
+      break;
+    case 'golgi':
+      for (let i = 0; i < 4; i++){
+        ctx.beginPath();
+        ctx.moveTo(-14 + i, -13 + i*8);
+        ctx.quadraticCurveTo(0, -19 + i*8, 14 - i, -13 + i*8);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = .7; ctx.beginPath(); ctx.arc(-15, 15, 3, 0, 7); ctx.fill();
+      break;
+    case 'tithe':
+      ctx.globalAlpha = .22;
+      ctx.beginPath(); ctx.ellipse(0, 0, 19, 12, 0, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.ellipse(0, 0, 19, 12, 0, 0, 7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-14, 0);
+      ctx.bezierCurveTo(-10, -7, -8, 7, -4, 0);
+      ctx.bezierCurveTo(0, -7, 2, 7, 6, 0);
+      ctx.bezierCurveTo(10, -7, 12, 7, 15, 0);
+      ctx.lineWidth = 2.6; ctx.stroke();
+      break;
+  }
+  ctx.restore();
+}
+
+function bieu(m, s){
+  const p = {
+    ribo : `<circle cx="12" cy="14" r="8" fill="${m.mau}"/><circle cx="24" cy="21" r="6" fill="${m.mau}" opacity=".7"/><circle cx="10" cy="27" r="3.4" fill="${m.mau}" opacity=".5"/>`,
+    lnc  : `<g fill="none" stroke="${m.mau}" stroke-width="2.8" stroke-linecap="round"><path d="M5 9h24M6 16h23M5 23h24M7 30h20"/></g><g fill="${m.mau}"><circle cx="10" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="27" cy="5" r="2"/></g>`,
+    golgi: `<g fill="none" stroke="${m.mau}" stroke-width="2.8" stroke-linecap="round"><path d="M7 9q11-5 22 0"/><path d="M6 16q12-5 24 0"/><path d="M8 23q10-5 20 0"/><path d="M11 30q7-4 14 0"/></g>`,
+    tithe: `<ellipse cx="18" cy="18" rx="15" ry="10" fill="${m.mau}" opacity=".2"/><ellipse cx="18" cy="18" rx="15" ry="10" fill="none" stroke="${m.mau}" stroke-width="2.6"/><path d="M6 18c3-5 5 5 8 0s5 5 8 0 5 5 8 0" fill="none" stroke="${m.mau}" stroke-width="2.2" stroke-linecap="round"/>`
+  }[m.id];
+  return `<svg viewBox="0 0 36 36" width="${s}" height="${s}" aria-hidden="true">${p}</svg>`;
+}
+
+/* — lớp ánh sáng: tối bốn góc, sáng quanh nhân vật.
+     Một lớp gradient duy nhất, nhưng đây là thứ làm cảnh có chiều sâu nhất. — */
+function anhSang(){
+  const p = tren(S.nv);
+  const g = ctx.createRadialGradient(p.x, p.y, 70*Z, p.x, p.y, Math.max(W, H) * 0.82);
+  g.addColorStop(0,    'rgba(0,0,0,0)');
+  g.addColorStop(0.58, 'rgba(12,8,4,.14)');
+  g.addColorStop(1,    'rgba(12,8,4,.46)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+boot();
+return { start, dap, mua, lap, moHoi, moKe, dong, lai };
+})();
+</script>
+</body>
+</html>
